@@ -5,18 +5,25 @@ using UI;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class GameController : MonoBehaviour
 {
     public Texture2D input;
+
+    // will work with square output for now and I'll make it rectangle later
+    public int width = 5;
     
     // this is not used anymore, will keep for a later date when I actually enable blocks and stuff
     // public int nValue = 1;
     
     [Header("Display")]
     public RawImage inputDisplay;
+    public RawImage outputDisplay;
     public Transform tileWeightParent;
     public GameObject tileWeightDisplayPrefab;
+
+    private Dictionary<Color, bool>[] _wfcMap;
     
     // Start is called before the first frame update
     void Start()
@@ -63,6 +70,8 @@ public class GameController : MonoBehaviour
             i += 1;
         }
         
+        // TODO: move all these commented out debug functions to somewhere else
+        
         // debug - all the unique tiles
         // foreach (Color color in processor.GetUniqueTiles())
         // {
@@ -76,34 +85,70 @@ public class GameController : MonoBehaviour
         // }
         
         // debug - show the allowed neighbors for each tile
-        Debug.Log(processor.GetAllowedNeighbors().Count);
-        foreach (KeyValuePair<Color,Dictionary<string,List<Color>>> tileKvp in processor.GetAllowedNeighbors())
+        // Debug.Log(processor.GetAllowedNeighbors().Count);
+        // foreach (KeyValuePair<Color,Dictionary<string,List<Color>>> tileKvp in processor.GetAllowedNeighbors())
+        // {
+        //     string debugString = "COLOR: " + tileKvp.Key;
+        //
+        //     int index = 0;
+        //     foreach (KeyValuePair<string,List<Color>> neighborKvp in tileKvp.Value)
+        //     {
+        //         debugString += ", DIRECTION " + index + "_" + neighborKvp.Key + ": ";
+        //
+        //         foreach (Color color in neighborKvp.Value)
+        //         {
+        //             debugString += color;
+        //         }
+        //         
+        //         index += 1;
+        //     }
+        //     
+        //     Debug.Log(debugString);
+        // }
+        
+        // initialise the output map
+        _wfcMap = new Dictionary<Color, bool>[width * width];
+        
+        for (int lIndex = 0; lIndex < _wfcMap.Length; lIndex++)
         {
-            string debugString = "COLOR: " + tileKvp.Key;
-
-            int index = 0;
-            foreach (KeyValuePair<string,List<Color>> neighborKvp in tileKvp.Value)
-            {
-                debugString += ", DIRECTION " + index + "_" + neighborKvp.Key + ": ";
-
-                foreach (Color color in neighborKvp.Value)
-                {
-                    debugString += color;
-                }
-                
-                index += 1;
-            }
-            
-            Debug.Log(debugString);
+            _wfcMap[lIndex] = new Dictionary<Color, bool>();
         }
+        
+        // may need to add more stuff alongside this dictionary
+        foreach (Dictionary<Color,bool> tileData in _wfcMap)
+        {
+            foreach (Color color in processor.GetUniqueTiles())
+            {
+                tileData.Add(color, true);
+            }
+        }
+        
+        // do wfc
+        
+        // for now select color randomly
+        Color[] outputColorMap = new Color[width * width];
+        int j = 0;
+        foreach (Dictionary<Color, bool> tileData in _wfcMap)
+        {
+            List<Color> keys = new List<Color>(tileData.Keys);
+            
+            int randomKeyIndex = Random.Range(0, keys.Count);
+            Color randomColor = keys[randomKeyIndex];
+
+            outputColorMap[j] = randomColor;
+
+            j += 1;
+        }
+        
+        DrawTexture(outputColorMap);
 
         // i think one possible optimization for the entropy would be not to calculate the entropy for the tiles
         //  which still have all the possible values 
-        
+
         // or could we rather precalculate the entropies based on all the possible combinations of tiles?
         // it might work for simpler input images which don't have too many possible combinations
         // but it might be worth trying it out, see how it performs
-        
+
         // maybe adding more debug info and values on the screen? 
         //  what sort of things would be useful?
     }
@@ -112,5 +157,19 @@ public class GameController : MonoBehaviour
     void Update()
     {
         
+    }
+
+    private void DrawTexture(Color[] colorMap)
+    {
+        Texture2D texture = new Texture2D (width, width)
+        {
+            filterMode = FilterMode.Point,
+            wrapMode = TextureWrapMode.Clamp
+        };
+
+        texture.SetPixels(colorMap);
+        texture.Apply();
+
+        outputDisplay.texture = texture;
     }
 }
