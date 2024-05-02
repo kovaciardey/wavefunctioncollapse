@@ -7,6 +7,8 @@ using UnityEngine;
 /**
  * Splits the image, returns the different types of colours and the pairs between each
  * Calculates the weights of each image
+ *
+ * TODO: need to try a round of refactoring after I get a first version done
  */
 public class ImageProcessor
 {
@@ -20,7 +22,14 @@ public class ImageProcessor
 	private Dictionary<Color, float> _colorWeights;
 	private Dictionary<Color, string> _colorWeightsDisplay;
 	
-	private List<string[]> _uniquePairs = new List<string[]>();
+	// The tuple contains items as follows:
+	// neighbour, current, direction
+	// e.g:
+	//	(SEA, COAST, LEFT): SEA tile can be placed to the LEFT of a COAST tile
+	//	(COAST, SEA, RIGHT): COAST tile can be placed to the RIGHT of a SEA tile
+	private List<Tuple<Color, Color, string>> _uniquePairs = new List<Tuple<Color, Color, string>>();
+
+	private Dictionary<Color, Dictionary<string, List<Color>>> _allowedNeighbors;
 	
 	public ImageProcessor(Texture2D texture)
 	{
@@ -70,6 +79,8 @@ public class ImageProcessor
 		CalculateColors();
 		
 		FindOrthogonalPixelPairs();
+
+		CalculateAllowedNeighbors();
 		
 		_importer.isReadable = false;
 	}
@@ -115,7 +126,7 @@ public class ImageProcessor
                     {
                         Color neighborPixel = pixels[neighborY * width + neighborX];
                         string pairDirection = GetDirectionName(direction);
-                        string[] pair = new string[3] { neighborPixel.ToString(), originalPixel.ToString(), pairDirection };
+                        Tuple<Color, Color, string> pair = new Tuple<Color, Color, string>(neighborPixel, originalPixel, pairDirection);
                         
                         // Check if the pair is unique before adding it to the list
                         if (!PairExists(pair))
@@ -128,11 +139,11 @@ public class ImageProcessor
         }
     }
 
-    private bool PairExists(string[] pair)
+    private bool PairExists(Tuple<Color, Color, string> pair)
     {
-        foreach (string[] existingPair in _uniquePairs)
+        foreach (Tuple<Color, Color, string> existingPair in _uniquePairs)
         {
-            if (existingPair[0] == pair[0] && existingPair[1] == pair[1] && existingPair[2] == pair[2])
+            if (existingPair.Item1 == pair.Item1 && existingPair.Item2 == pair.Item2 && existingPair.Item3 == pair.Item3)
             {
                 return true;
             }
@@ -153,6 +164,45 @@ public class ImageProcessor
         return "Unknown";
     }
 	
+    // create a dictionary
+    // Color, Dictionary<string, List<Color>>
+    private void CalculateAllowedNeighbors()
+    {
+	    _allowedNeighbors = new Dictionary<Color, Dictionary<string, List<Color>>>();
+
+	    foreach (Color color in _uniqueColors)
+	    {
+		    // Debug.Log("COLOR: " + color);
+		    
+		    Dictionary<string, List<Color>> neighbors = new Dictionary<string, List<Color>>();
+
+		    foreach (Tuple<Color,Color,string> pair in GetTilePairs())
+		    {
+			    if (pair.Item2 == color)
+			    {
+				    // Debug.Log("Unique Pair Added: " + pair.Item1 + ", " + pair.Item2 + ", " + pair.Item3);
+				    
+				    // if the direction already exists, it mean that the list has already been initialised
+				    // then simple add item 1 to the list.. In theory tho, I don't think there will be any pixels
+				    // with more than 1 element per direction
+				    
+				    // This feels kinda iffy tbh, but it does make sense (may need to rewrite without the TryAdd function) 
+					if (!neighbors.TryAdd(pair.Item3, new List<Color>()))
+					{
+						neighbors[pair.Item3].Add(pair.Item1);
+					}
+					else
+					{
+						neighbors[pair.Item3].Add(pair.Item1);
+					}
+			    }
+		    }
+		    
+		    // this should not have any duplicates, as the dictionaries were built in advance
+		    _allowedNeighbors.Add(color, neighbors);
+	    }
+    }
+	
 	public Dictionary<Color, int> GetTileCount()
 	{
 		return _colorCounts;
@@ -168,7 +218,7 @@ public class ImageProcessor
 		return _colorWeightsDisplay;
 	}
 
-	public List<string[]> GetTilePairs()
+	public List<Tuple<Color, Color, string>> GetTilePairs()
 	{
 		return _uniquePairs;
 	}
@@ -176,5 +226,10 @@ public class ImageProcessor
 	public Color[] GetUniqueTiles()
 	{
 		return _uniqueColors;
+	}
+
+	public Dictionary<Color, Dictionary<string, List<Color>>> GetAllowedNeighbors()
+	{
+		return _allowedNeighbors;
 	}
 }

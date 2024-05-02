@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UI;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -69,10 +70,32 @@ public class GameController : MonoBehaviour
         // }
         
         // debug - all the unique pairs
-        // foreach (string[] pair in processor.GetTilePairs())
+        // foreach (Tuple<Color, Color, string> pair in processor.GetTilePairs())
         // {
-        //     Debug.Log("Unique Pair Added: " + pair[0] + ", " + pair[1] + ", " + pair[2]);
+        //     Debug.Log("Unique Pair Added: " + pair.Item1 + ", " + pair.Item2 + ", " + pair.Item3);
         // }
+        
+        // debug - show the allowed neighbors for each tile
+        Debug.Log(processor.GetAllowedNeighbors().Count);
+        foreach (KeyValuePair<Color,Dictionary<string,List<Color>>> tileKvp in processor.GetAllowedNeighbors())
+        {
+            string debugString = "COLOR: " + tileKvp.Key;
+
+            int index = 0;
+            foreach (KeyValuePair<string,List<Color>> neighborKvp in tileKvp.Value)
+            {
+                debugString += ", DIRECTION " + index + "_" + neighborKvp.Key + ": ";
+
+                foreach (Color color in neighborKvp.Value)
+                {
+                    debugString += color;
+                }
+                
+                index += 1;
+            }
+            
+            Debug.Log(debugString);
+        }
 
         // i think one possible optimization for the entropy would be not to calculate the entropy for the tiles
         //  which still have all the possible values 
