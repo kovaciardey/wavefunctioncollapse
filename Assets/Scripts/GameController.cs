@@ -33,17 +33,19 @@ public class GameController : MonoBehaviour
         // and calculate all possible tile colours 
         processor.Process();
         
-        // and their weights
-        foreach (KeyValuePair<Color, int> kvp in processor.GetTileCount())
-        {
-            Debug.Log("Color: " + kvp.Key + ", Count: " + kvp.Value);
-        }
+        // debug - tile Count
+        // foreach (KeyValuePair<Color, int> kvp in processor.GetTileCount())
+        // {
+        //     Debug.Log("Color: " + kvp.Key + ", Count: " + kvp.Value);
+        // }
         
-        foreach (KeyValuePair<Color, float> kvp in processor.GetTileWeights())
-        {
-            Debug.Log("Color: " + kvp.Key + ", Weight: " + kvp.Value);
-        }
-
+        // debug - weights as float
+        // foreach (KeyValuePair<Color, float> kvp in processor.GetTileWeights())
+        // {
+        //     Debug.Log("Color: " + kvp.Key + ", Weight: " + kvp.Value);
+        // }
+        
+        // show the weights as a fraction on the screen
         int i = 0;
         foreach (KeyValuePair<Color, string> kvp in processor.GetTileWeightsDisplay())
         {
@@ -59,9 +61,28 @@ public class GameController : MonoBehaviour
 
             i += 1;
         }
+        
+        // debug - all the unique tiles
+        // foreach (Color color in processor.GetUniqueTiles())
+        // {
+        //     Debug.Log(color);
+        // }
+        
+        // debug - all the unique pairs
+        // foreach (string[] pair in processor.GetTilePairs())
+        // {
+        //     Debug.Log("Unique Pair Added: " + pair[0] + ", " + pair[1] + ", " + pair[2]);
+        // }
 
         // i think one possible optimization for the entropy would be not to calculate the entropy for the tiles
         //  which still have all the possible values 
+        
+        // or could we rather precalculate the entropies based on all the possible combinations of tiles?
+        // it might work for simpler input images which don't have too many possible combinations
+        // but it might be worth trying it out, see how it performs
+        
+        // maybe adding more debug info and values on the screen? 
+        //  what sort of things would be useful?
     }
 
     // Update is called once per frame
