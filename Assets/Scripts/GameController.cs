@@ -22,6 +22,12 @@ public class GameController : MonoBehaviour
     public RawImage outputDisplay;
     public Transform tileWeightParent;
     public GameObject tileWeightDisplayPrefab;
+    
+    // rethink this bit here cos it's not working as I imagined
+    [Range(1, 10)]
+    public int slowdownFactor;
+    
+    // I could maybe add a setting here to say which background color to use
 
     private MapTile[] _wfcMap;
     
@@ -106,32 +112,9 @@ public class GameController : MonoBehaviour
         //     Debug.Log(debugString);
         // }
         
-        // initialise the output map
-        _wfcMap = new MapTile[width * width];
-        for (int j = 0; j < width; j += 1)
-        {
-            for (int i = 0; i < width; i += 1)
-            {
-                Vector2Int coords = new Vector2Int(i, j);
-
-                _wfcMap[GetArrayIndexFromCoords(coords)] = new MapTile(coords, processor.GetUniqueTiles());
-            }
-        }
+        GenerateWithDelay(processor.GetUniqueTiles());
         
-        // do wfc
-        foreach (MapTile tile in _wfcMap)
-        {
-            tile.Collapse();
-        }
         
-        // for now select color randomly
-        Color[] outputColorMap = new Color[width * width];
-        foreach (MapTile tile in _wfcMap)
-        {
-            outputColorMap[GetArrayIndexFromCoords(tile.GetCoords())] = tile.GetSelectedColor();
-        }
-        
-        DrawTexture(outputColorMap);
 
         // i think one possible optimization for the entropy would be not to calculate the entropy for the tiles
         //  which still have all the possible values 
@@ -147,7 +130,50 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        DrawTexture(GetColorMap());
+    }
+
+    private void GenerateWithDelay(Color[] colors)
+    {
+        // initialise the output map
+        _wfcMap = new MapTile[width * width];
+        for (int j = 0; j < width; j += 1)
+        {
+            for (int i = 0; i < width; i += 1)
+            {
+                Vector2Int coords = new Vector2Int(i, j);
+
+                _wfcMap[GetArrayIndexFromCoords(coords)] = new MapTile(coords, colors);
+            }
+        }
         
+        StartCoroutine(GetAnimateWfc());
+    }
+    
+    private IEnumerator GetAnimateWfc()
+    {
+        // do wfc
+        foreach (MapTile tile in _wfcMap)
+        {
+            tile.Collapse();
+            
+            // a value of 1 means 5s..?
+            // will need a rethink
+            yield return new WaitForSeconds(5f / (float) Math.Pow(10, slowdownFactor));
+        }
+        
+        // for the future, trigger a flag or smth so that it stops the coroutine when the wfc stops
+    }
+
+    private Color[] GetColorMap()
+    {
+        Color[] outputColorMap = new Color[width * width];
+        foreach (MapTile tile in _wfcMap)
+        {
+            outputColorMap[GetArrayIndexFromCoords(tile.GetCoords())] = tile.GetSelectedColor();
+        }
+
+        return outputColorMap;
     }
     
     private int GetArrayIndexFromCoords(Vector2Int coords)

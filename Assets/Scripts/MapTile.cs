@@ -45,6 +45,11 @@ public class MapTile
 
 	public Color GetSelectedColor()
 	{
+		if (!IsCollapsed)
+		{
+			return new Color(0, 0, 0);
+		}
+		
 		foreach (KeyValuePair<Color, bool> kvp in TileSuperpositions)
 		{
 			if (kvp.Value)
@@ -54,7 +59,7 @@ public class MapTile
 		}
 		
 		// just for the compiler
-		return new Color();
+		return new Color(0, 0, 0);
 	}
 	
 	// need to figure out this bit here.. 
