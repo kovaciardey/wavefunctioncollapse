@@ -23,7 +23,7 @@ public class GameController : MonoBehaviour
     public Transform tileWeightParent;
     public GameObject tileWeightDisplayPrefab;
 
-    private Dictionary<Color, bool>[] _wfcMap;
+    private MapTile[] _wfcMap;
     
     // Start is called before the first frame update
     void Start()
@@ -54,12 +54,12 @@ public class GameController : MonoBehaviour
         // }
         
         // show the weights as a fraction on the screen
-        int i = 0;
+        int index = 0;
         foreach (KeyValuePair<Color, string> kvp in processor.GetTileWeightsDisplay())
         {
             // Debug.Log("Color: " + kvp.Key + ", Display: " + kvp.Value);
 
-            Vector3 position = new Vector3(0f, i * tileWeightDisplayPrefab.GetComponent<RectTransform>().rect.height, 0f);
+            Vector3 position = new Vector3(0f, index * tileWeightDisplayPrefab.GetComponent<RectTransform>().rect.height, 0f);
             
             // I could look into the better UI manager thingy later on.. but that is not the point right now
             GameObject tileWeightDisplay = Instantiate(tileWeightDisplayPrefab, position, Quaternion.identity);
@@ -67,7 +67,7 @@ public class GameController : MonoBehaviour
             
             tileWeightDisplay.transform.SetParent(tileWeightParent);
 
-            i += 1;
+            index += 1;
         }
         
         // TODO: move all these commented out debug functions to somewhere else
@@ -107,37 +107,28 @@ public class GameController : MonoBehaviour
         // }
         
         // initialise the output map
-        _wfcMap = new Dictionary<Color, bool>[width * width];
-        
-        for (int lIndex = 0; lIndex < _wfcMap.Length; lIndex++)
+        _wfcMap = new MapTile[width * width];
+        for (int j = 0; j < width; j += 1)
         {
-            _wfcMap[lIndex] = new Dictionary<Color, bool>();
-        }
-        
-        // may need to add more stuff alongside this dictionary
-        foreach (Dictionary<Color,bool> tileData in _wfcMap)
-        {
-            foreach (Color color in processor.GetUniqueTiles())
+            for (int i = 0; i < width; i += 1)
             {
-                tileData.Add(color, true);
+                Vector2Int coords = new Vector2Int(i, j);
+
+                _wfcMap[GetArrayIndexFromCoords(coords)] = new MapTile(coords, processor.GetUniqueTiles());
             }
         }
         
         // do wfc
+        foreach (MapTile tile in _wfcMap)
+        {
+            tile.Collapse();
+        }
         
         // for now select color randomly
         Color[] outputColorMap = new Color[width * width];
-        int j = 0;
-        foreach (Dictionary<Color, bool> tileData in _wfcMap)
+        foreach (MapTile tile in _wfcMap)
         {
-            List<Color> keys = new List<Color>(tileData.Keys);
-            
-            int randomKeyIndex = Random.Range(0, keys.Count);
-            Color randomColor = keys[randomKeyIndex];
-
-            outputColorMap[j] = randomColor;
-
-            j += 1;
+            outputColorMap[GetArrayIndexFromCoords(tile.GetCoords())] = tile.GetSelectedColor();
         }
         
         DrawTexture(outputColorMap);
@@ -157,6 +148,11 @@ public class GameController : MonoBehaviour
     void Update()
     {
         
+    }
+    
+    private int GetArrayIndexFromCoords(Vector2Int coords)
+    {
+        return coords.x * width + coords.y;
     }
 
     private void DrawTexture(Color[] colorMap)
