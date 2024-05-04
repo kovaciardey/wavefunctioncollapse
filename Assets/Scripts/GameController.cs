@@ -29,6 +29,7 @@ public class GameController : MonoBehaviour
     
     // I could maybe add a setting here to say which background color to use
 
+    private ImageProcessor _processor;
     private MapTile[] _wfcMap;
     
     // Start is called before the first frame update
@@ -42,10 +43,10 @@ public class GameController : MonoBehaviour
         inputDisplay.transform.localScale = new Vector3 (input.width, input.height, 1);
         
         // now i process the input image
-        ImageProcessor processor = new ImageProcessor(input);
+        _processor = new ImageProcessor(input);
 
         // and calculate all possible tile colours 
-        processor.Process();
+        _processor.Process();
         
         // debug - tile Count
         // foreach (KeyValuePair<Color, int> kvp in processor.GetTileCount())
@@ -61,7 +62,7 @@ public class GameController : MonoBehaviour
         
         // show the weights as a fraction on the screen
         int index = 0;
-        foreach (KeyValuePair<Color, string> kvp in processor.GetTileWeightsDisplay())
+        foreach (KeyValuePair<Color, string> kvp in _processor.GetTileWeightsDisplay())
         {
             // Debug.Log("Color: " + kvp.Key + ", Display: " + kvp.Value);
 
@@ -91,28 +92,28 @@ public class GameController : MonoBehaviour
         // }
         
         // debug - show the allowed neighbors for each tile
-        // Debug.Log(processor.GetAllowedNeighbors().Count);
-        // foreach (KeyValuePair<Color,Dictionary<string,List<Color>>> tileKvp in processor.GetAllowedNeighbors())
-        // {
-        //     string debugString = "COLOR: " + tileKvp.Key;
-        //
-        //     int index = 0;
-        //     foreach (KeyValuePair<string,List<Color>> neighborKvp in tileKvp.Value)
-        //     {
-        //         debugString += ", DIRECTION " + index + "_" + neighborKvp.Key + ": ";
-        //
-        //         foreach (Color color in neighborKvp.Value)
-        //         {
-        //             debugString += color;
-        //         }
-        //         
-        //         index += 1;
-        //     }
-        //     
-        //     Debug.Log(debugString);
-        // }
+        Debug.Log(_processor.GetAllowedNeighbors().Count);
+        foreach (KeyValuePair<Color,Dictionary<string,List<Color>>> tileKvp in _processor.GetAllowedNeighbors())
+        {
+            string debugString = "COLOR: " + tileKvp.Key;
         
-        GenerateWithDelay(processor.GetUniqueTiles());
+            int index2 = 0;
+            foreach (KeyValuePair<string,List<Color>> neighborKvp in tileKvp.Value)
+            {
+                debugString += ", DIRECTION " + index2 + "_" + neighborKvp.Key + ": ";
+        
+                foreach (Color color in neighborKvp.Value)
+                {
+                    debugString += color;
+                }
+                
+                index2 += 1;
+            }
+            
+            Debug.Log(debugString);
+        }
+        
+        GenerateWithDelay(_processor.GetUniqueTiles());
         
         
 
@@ -155,7 +156,11 @@ public class GameController : MonoBehaviour
         // do wfc
         foreach (MapTile tile in _wfcMap)
         {
-            tile.Collapse();
+            // calculate and debug.Log the shannon entropy of each tile.. (should be the same for all)
+            Debug.Log(CalculateShannonEntropy(tile, _processor.GetTileWeights()));
+            
+            // pass in the weights when collapsing 
+            tile.Collapse(_processor.GetTileWeights());
             
             // a value of 1 means 5s..?
             // will need a rethink
@@ -163,6 +168,24 @@ public class GameController : MonoBehaviour
         }
         
         // for the future, trigger a flag or smth so that it stops the coroutine when the wfc stops
+    }
+
+    private float CalculateShannonEntropy(MapTile tile, Dictionary<Color, float> weights)
+    {
+        float sumOfWeights = 0;
+        float sumOfWeightLogWeights = 0;
+
+        foreach (KeyValuePair<Color,bool> pair in tile.TileSuperpositions)
+        {
+            if (pair.Value)
+            {
+                float weight = weights[pair.Key];
+                sumOfWeights += weight;
+                sumOfWeightLogWeights += weight * (float) Math.Log(weight);
+            }
+        }
+
+        return (float) Math.Log(sumOfWeights) - (sumOfWeightLogWeights / sumOfWeights);
     }
 
     private Color[] GetColorMap()

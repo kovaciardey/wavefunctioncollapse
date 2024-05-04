@@ -24,23 +24,57 @@ public class MapTile
 			TileSuperpositions.Add(color, true);
 		}
 	}
-
-	public void Collapse()
+	
+	// collapse tile based on the weights
+	public void Collapse(Dictionary<Color, float> weights)
 	{
 		// set IsCollapsed to true
 		IsCollapsed = true;
-
-		// choose a random color to to be collapsed
-		// get random dictionary key (could move to a function)
-		List<Color> keys = new List<Color>(TileSuperpositions.Keys);
-
-		int randomKeyIndex = Random.Range(0, keys.Count);
-		Color randomKey = keys[randomKeyIndex];
-
-		foreach (Color key in keys)
+		
+		// Calculate the total weight
+		// this will always be 1 tbf..
+		float totalWeight = 0f;
+		foreach (KeyValuePair<Color, float> kvp in weights)
 		{
-			TileSuperpositions[key] = (key == randomKey);
+			totalWeight += kvp.Value;
 		}
+		
+		// Generate a random number between 0 and the total weight
+		float randomValue = Random.Range(0f, totalWeight);
+		
+		// Iterate through the colors and select one based on weights
+		float cumulativeWeight = 0f;
+		Color selectedColor = Color.white; // default color, can be any valid color
+		foreach (var kvp in weights)
+		{
+			cumulativeWeight += kvp.Value;
+			if (randomValue <= cumulativeWeight)
+			{
+				selectedColor = kvp.Key;
+				break;
+			}
+		}
+		
+		// Create a list to store keys that need to be modified
+		List<Color> keysToModify = new List<Color>();
+
+		// Identify keys that need to be modified
+		foreach (var key in TileSuperpositions.Keys)
+		{
+			if (key != selectedColor)
+			{
+				keysToModify.Add(key);
+			}
+		}
+
+		// Modify TileSuperpositions based on the selected color
+		foreach (var key in keysToModify)
+		{
+			TileSuperpositions[key] = false;
+		}
+
+		// Set the selected color to true
+		TileSuperpositions[selectedColor] = true;
 	}
 
 	public Color GetSelectedColor()
