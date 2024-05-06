@@ -13,6 +13,8 @@ public class GameController : MonoBehaviour
 
     // will work with square output for now and I'll make it rectangle later
     public int width = 5;
+
+    public float floatComparisonTolerance = 0.00005f;
     
     // this is not used anymore, will keep for a later date when I actually enable blocks and stuff
     // public int nValue = 1;
@@ -92,29 +94,31 @@ public class GameController : MonoBehaviour
         // }
         
         // debug - show the allowed neighbors for each tile
-        Debug.Log(_processor.GetAllowedNeighbors().Count);
-        foreach (KeyValuePair<Color,Dictionary<string,List<Color>>> tileKvp in _processor.GetAllowedNeighbors())
-        {
-            string debugString = "COLOR: " + tileKvp.Key;
-        
-            int index2 = 0;
-            foreach (KeyValuePair<string,List<Color>> neighborKvp in tileKvp.Value)
-            {
-                debugString += ", DIRECTION " + index2 + "_" + neighborKvp.Key + ": ";
-        
-                foreach (Color color in neighborKvp.Value)
-                {
-                    debugString += color;
-                }
-                
-                index2 += 1;
-            }
-            
-            Debug.Log(debugString);
-        }
+        // Debug.Log(_processor.GetAllowedNeighbors().Count);
+        // foreach (KeyValuePair<Color,Dictionary<string,List<Color>>> tileKvp in _processor.GetAllowedNeighbors())
+        // {
+        //     string debugString = "COLOR: " + tileKvp.Key;
+        //
+        //     int index2 = 0;
+        //     foreach (KeyValuePair<string,List<Color>> neighborKvp in tileKvp.Value)
+        //     {
+        //         debugString += ", DIRECTION " + index2 + "_" + neighborKvp.Key + ": ";
+        //
+        //         foreach (Color color in neighborKvp.Value)
+        //         {
+        //             debugString += color;
+        //         }
+        //         
+        //         index2 += 1;
+        //     }
+        //     
+        //     Debug.Log(debugString);
+        // }
         
         GenerateWithDelay(_processor.GetUniqueTiles());
         
+        
+        // when refactoring make a separate class for the WFC algorithm
         
 
         // i think one possible optimization for the entropy would be not to calculate the entropy for the tiles
@@ -123,6 +127,10 @@ public class GameController : MonoBehaviour
         // or could we rather precalculate the entropies based on all the possible combinations of tiles?
         // it might work for simpler input images which don't have too many possible combinations
         // but it might be worth trying it out, see how it performs
+            // this might not work, cos what if there are tiles which can have all possible neighbours?
+            // this might be a bit of an edge case tho
+        
+        // or maybe keep track of the uncollapsed tiles in a separate array and only iterate through that
 
         // maybe adding more debug info and values on the screen? 
         //  what sort of things would be useful?
@@ -153,14 +161,28 @@ public class GameController : MonoBehaviour
     
     private IEnumerator GetAnimateWfc()
     {
+        // collapse first
+        CollapseAtCoords(GetRandomUncollapsedWithTheLowestEntropy().GetCoords());
+        
         // do wfc
-        foreach (MapTile tile in _wfcMap)
+        int iteration = 0;
+        while (HasUncollapsed())
         {
-            // calculate and debug.Log the shannon entropy of each tile.. (should be the same for all)
-            Debug.Log(CalculateShannonEntropy(tile, _processor.GetTileWeights()));
+            if (iteration == 10)
+            {
+                break;
+            }
             
-            // pass in the weights when collapsing 
-            tile.Collapse(_processor.GetTileWeights());
+            MapTile randomTile = GetRandomUncollapsedWithTheLowestEntropy();
+            
+            if (randomTile == null)
+            {
+                break;
+            }
+            
+            CollapseAtCoords(randomTile.GetCoords());
+
+            iteration += 1;
             
             // a value of 1 means 5s..?
             // will need a rethink
@@ -216,5 +238,86 @@ public class GameController : MonoBehaviour
         texture.Apply();
 
         outputDisplay.texture = texture;
+    }
+    
+    // returns true if the grid has nod been filled yet
+    public bool HasUncollapsed()
+    {
+        foreach (MapTile tile in _wfcMap) 
+        {
+            // the first uncollapsed tile it encounters returns true
+            if (!tile.IsCollapsed)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    public MapTile GetRandomUncollapsedWithTheLowestEntropy()
+    {
+        float lowestEntropy = Mathf.Infinity;
+        
+        // find the lowest entropy
+        foreach (MapTile mapTile in _wfcMap)
+        {
+            if (mapTile.IsCollapsed) { continue; }
+            
+            float tileEntropy = CalculateShannonEntropy(mapTile, _processor.GetTileWeights());
+
+            if (tileEntropy < lowestEntropy)
+            {
+                lowestEntropy = tileEntropy;
+            }
+        }
+        
+        List<MapTile> lowestEntropyList = new List<MapTile>();
+    
+        // find all the tiles with the lowest entropy
+        foreach (MapTile mapTile in _wfcMap)
+        {
+            if (mapTile.IsCollapsed) { continue; }
+            
+            if (Math.Abs(CalculateShannonEntropy(mapTile, _processor.GetTileWeights()) - lowestEntropy) < floatComparisonTolerance)
+            {
+                lowestEntropyList.Add(mapTile);
+            }
+        }
+        
+        if (lowestEntropyList.Count == 0)
+        {
+            return null;
+        }
+
+        MapTile randomSelectedTileVersionOne = lowestEntropyList[Random.Range(0, lowestEntropyList.Count)];
+
+        return randomSelectedTileVersionOne;
+    }
+
+    public void CollapseAtCoords(Vector2Int coords)
+    {
+        MapTile tile = _wfcMap[GetArrayIndexFromCoords(coords)];
+        tile.Collapse(_processor.GetTileWeights());
+        
+        // propagate the collapsing to the immediate neighbors
+        
+    }
+    
+    private Vector2Int GetDirectionVector(string directionName)
+    {
+        switch (directionName.ToLower())
+        {
+            case "up":
+                return Vector2Int.up;
+            case "down":
+                return Vector2Int.down;
+            case "left":
+                return Vector2Int.left;
+            case "right":
+                return Vector2Int.right;
+            default:
+                return Vector2Int.zero; // or any default value you prefer
+        }
     }
 }
