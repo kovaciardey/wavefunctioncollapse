@@ -134,6 +134,7 @@ public class GameController : MonoBehaviour
 
         // maybe adding more debug info and values on the screen? 
         //  what sort of things would be useful?
+            // could hover the mouse over a pixel and see some data about it, like status, entropy and all the stuff
     }
 
     // Update is called once per frame
@@ -182,7 +183,7 @@ public class GameController : MonoBehaviour
             
             CollapseAtCoords(randomTile.GetCoords());
 
-            iteration += 1;
+            // iteration += 1;
             
             // a value of 1 means 5s..?
             // will need a rethink
@@ -302,22 +303,111 @@ public class GameController : MonoBehaviour
         
         // propagate the collapsing to the immediate neighbors
         
-    }
-    
-    private Vector2Int GetDirectionVector(string directionName)
-    {
-        switch (directionName.ToLower())
+        // initialise the stack 
+        
+        // while length stack > 0
+        // remove last element 
+        // get the colors
+        
+        // for every DIRECTION 
+        // get the tile at the coords
+        
+        // for every OTHER_COLOR 
+        // get all the possible TILE_COLORS
+        // check all existing pairs CURRENT_COLOR, OTHER_COLOR, DIRECTION
+        
+        // if there are no possible pairs for the OTHER_COLOR
+        // set OTHER_COLOR to false on tile
+        
+        // add OTHER_COORDS to stack
+        
+        // Define the directions: up, down, left, right
+        
+        // push the tile that was just collapsed
+        Stack<MapTile> stack = new Stack<MapTile>();
+        stack.Push(tile);
+        
+        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+
+        while (stack.Count > 0)
         {
-            case "up":
-                return Vector2Int.up;
-            case "down":
-                return Vector2Int.down;
-            case "left":
-                return Vector2Int.left;
-            case "right":
-                return Vector2Int.right;
-            default:
-                return Vector2Int.zero; // or any default value you prefer
+            MapTile currentTile = stack.Pop();
+            
+            foreach (Vector2Int direction in directions)
+            {
+                Vector2Int neighborCoords = currentTile.GetCoords() + direction;
+                
+                if (!InGrid(neighborCoords))
+                {
+                    continue;
+                }
+                
+                MapTile neighborTile = _wfcMap[GetArrayIndexFromCoords(neighborCoords)];
+
+                if (neighborTile.IsCollapsed)
+                {
+                    // Debug.Log("Skipped - COLLAPSED");
+                    continue;
+                }
+                
+                // Debug.Log("OTHER " + _processor.GetDirectionName(direction) + ": " + neighborTile.GetAllowedColors().Count);
+                // this is kinda ugly :)) 
+                foreach (Color otherColor in neighborTile.GetAllowedColors())
+                {
+                    // Debug.Log("OTHER " + _processor.GetDirectionName(direction) + ": " + otherColor);
+                    
+                    bool foundPair = false;
+                    
+                    foreach (Color tileColor in currentTile.GetAllowedColors())
+                    {
+                        // Debug.Log("TILE: " + tileColor);
+                        
+                        Tuple<Color, Color, string> tempTuple = new Tuple<Color, Color, string>(tileColor, otherColor, _processor.GetDirectionName(direction));
+                        // Debug.Log("TEMP TUPLE: " + tempTuple.Item1 + ", " + tempTuple.Item2 + ", " + tempTuple.Item3);
+
+                        
+                        // get all the tuples in the list of possible pairs
+                        foreach (Tuple<Color,Color,string> dataTuple in _processor.GetTilePairs())
+                        {
+                            if (CompareTuple(dataTuple, tempTuple))
+                            {
+                                // Debug.Log("PAIR FOUND");
+                                foundPair = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!foundPair)
+                        {
+                            neighborTile.UpdateSuperposition(otherColor, false);
+                            // stack.Push(neighborTile); // this might add multiple times?
+                        }
+                    }
+                    // Debug.Log("OTHER " + _processor.GetDirectionName(direction) + ": " + neighborTile.GetAllowedColors().Count);
+                }
+            }
         }
+    }
+
+    private bool CompareTuple(
+        Tuple<Color, Color, string> dataTuple, 
+        Tuple<Color, Color, string> tempTuple
+    )
+    {
+        return dataTuple.Item1 == tempTuple.Item1 && 
+               dataTuple.Item2 == tempTuple.Item2 &&
+               dataTuple.Item3 == tempTuple.Item3;
+    }
+
+    private bool InGrid(Vector2Int coords)
+    {
+        // Check if both x and y components are within the bounds of the grid
+        // need to put height here when 
+        if (coords.x >= 0 && coords.x < width && coords.y >= 0 && coords.y < width)
+        {
+            return true; // Position is within the square grid
+        }
+        
+        return false; // Position is outside the square grid
     }
 }

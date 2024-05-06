@@ -364,8 +364,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1672b84fb520b684b8481c30932c8b4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  input: {fileID: 2800000, guid: f9922edb599999346829972c99776db9, type: 3}
+  input: {fileID: 2800000, guid: b89ed4fec73a1c742b904dcf0b10f417, type: 3}
   width: 25
+  floatComparisonTolerance: 0.00005
   inputDisplay: {fileID: 2086748563}
   outputDisplay: {fileID: 1737845382}
   tileWeightParent: {fileID: 378442277}

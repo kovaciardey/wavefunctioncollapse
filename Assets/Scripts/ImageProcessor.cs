@@ -125,7 +125,7 @@ public class ImageProcessor
                     if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height)
                     {
                         Color neighborPixel = pixels[neighborY * width + neighborX];
-                        string pairDirection = GetDirectionName(direction);
+                        string pairDirection = GetDirectionName(direction); // this might be bad that it uses strings like that.. rethink a bit
                         Tuple<Color, Color, string> pair = new Tuple<Color, Color, string>(neighborPixel, originalPixel, pairDirection);
                         
                         // Check if the pair is unique before adding it to the list
@@ -137,6 +137,11 @@ public class ImageProcessor
                 }
             }
         }
+        
+        // // HARDCODED: I need to manually add green as the bottom allowed neighbor for green as there is no neighbor
+        // // the bitmap didn't contain enough info
+        // _uniquePairs.Add(new Tuple<Color, Color, string>(new Color(0.071f, 0.576f, 0.192f), new Color(0.071f, 0.576f, 0.192f), "Up"));
+        // _uniquePairs.Add(new Tuple<Color, Color, string>(new Color(0.071f, 0.576f, 0.192f), new Color(0.071f, 0.576f, 0.192f), "Down"));
     }
 
     private bool PairExists(Tuple<Color, Color, string> pair)
@@ -151,7 +156,7 @@ public class ImageProcessor
         return false;
     }
 
-    private string GetDirectionName(Vector2Int direction)
+    public string GetDirectionName(Vector2Int direction)
     {
         if (direction == Vector2Int.up)
             return "Up";

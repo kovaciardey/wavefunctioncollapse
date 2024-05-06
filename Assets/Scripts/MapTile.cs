@@ -149,4 +149,24 @@ public class MapTile
 	{
 		return _coords;
 	}
+
+	public List<Color> GetAllowedColors()
+	{
+		List<Color> colors = new List<Color>();
+
+		foreach (KeyValuePair<Color,bool> pair in TileSuperpositions)
+		{
+			if (pair.Value)
+			{
+				colors.Add(pair.Key);
+			}
+		}
+
+		return colors;
+	}
+
+	public void UpdateSuperposition(Color color, bool value)
+	{
+		TileSuperpositions[color] = value;
+	}
 }
