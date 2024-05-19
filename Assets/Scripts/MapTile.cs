@@ -36,7 +36,10 @@ public class MapTile
 		float totalWeight = 0f;
 		foreach (KeyValuePair<Color, float> kvp in weights)
 		{
-			totalWeight += kvp.Value;
+			if (TileSuperpositions[kvp.Key])
+			{
+				totalWeight += kvp.Value;
+			}
 		}
 		
 		// Generate a random number between 0 and the total weight
@@ -47,11 +50,14 @@ public class MapTile
 		Color selectedColor = Color.white; // default color, can be any valid color
 		foreach (var kvp in weights)
 		{
-			cumulativeWeight += kvp.Value;
-			if (randomValue <= cumulativeWeight)
+			if (TileSuperpositions[kvp.Key])
 			{
-				selectedColor = kvp.Key;
-				break;
+				cumulativeWeight += kvp.Value;
+				if (randomValue <= cumulativeWeight)
+				{
+					selectedColor = kvp.Key;
+					break;
+				}
 			}
 		}
 		
@@ -79,17 +85,22 @@ public class MapTile
 	
 	// returns the color the tile should have when it is being drawn on the texture
 	// it has nothing to do with the calculation of the WFC. just for display
+	
+	// NOTE: tiles which have all options allowed will show as black rather than the average color
 	public Color GetSelectedColor()
 	{
 		if (!IsCollapsed)
 		{
 			// not collapsed and can have all possible options
 			// show black
-
-			if (!HasBeenPropagated())
-			{
-				return new Color(0, 0, 0);
-			}
+			
+			// just calculate the average either way
+			
+			
+			// if (!HasBeenPropagated())
+			// {
+			// 	return new Color(0, 0, 0);
+			// }
 
 			// else
 			

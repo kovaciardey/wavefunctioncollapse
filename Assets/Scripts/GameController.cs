@@ -170,6 +170,8 @@ public class GameController : MonoBehaviour
         int iteration = 0;
         while (HasUncollapsed())
         {
+            // kjhsdklfjghksdjlfhgkljsdfhg
+            
             // if (iteration == 0)
             // {
             //     break;
@@ -334,7 +336,7 @@ public class GameController : MonoBehaviour
         {
             MapTile currentTile = stack.Pop();
             
-            // Debug.Log("Current tile: " + _processor.GetColorLetter(currentTile.GetAllowedColors()));
+            Debug.Log("TILE " + _processor.GetColorLetter(currentTile.GetAllowedColors()[0]));
             // Debug.Log("Allowed Neighbours");
             //
             // foreach (Color tileColor in currentTile.GetAllowedColors())
@@ -346,10 +348,13 @@ public class GameController : MonoBehaviour
             
             foreach (Vector2Int direction in directions)
             {
+                Debug.Log(_processor.GetDirectionName(direction).ToUpper() + " - " + _processor.GetColorLetter(currentTile.GetAllowedColors()[0]) + "===================================================================================");
+                
                 Vector2Int neighborCoords = currentTile.GetCoords() + direction;
                 
                 if (!InGrid(neighborCoords))
                 {
+                    Debug.Log("Skipped - NOT in grid");
                     continue;
                 }
                 
@@ -357,32 +362,32 @@ public class GameController : MonoBehaviour
 
                 if (neighborTile.IsCollapsed)
                 {
-                    // Debug.Log("Skipped - COLLAPSED");
+                    Debug.Log("Skipped - COLLAPSED");
                     continue;
                 }
                 
-                // Debug.Log("OTHER " + _processor.GetDirectionName(direction) + ": " + neighborTile.GetAllowedColors().Count);
+                // Debug.Log("OTHER Count: " + neighborTile.GetAllowedColors().Count);
+                
                 // this is kinda ugly :)) 
                 foreach (Color otherColor in neighborTile.GetAllowedColors()) 
                 {
-                    // Debug.Log("OTHER " + _processor.GetDirectionName(direction) + ": " + otherColor);
-                    
-                    bool foundPair = false;
+                    // Debug.Log("OTHER Color" + ": " + _processor.GetColorLetter(otherColor));
                     
                     foreach (Color tileColor in currentTile.GetAllowedColors())
                     {
+                        bool foundPair = false;
+                        
                         // Debug.Log("TILE: " + tileColor);
                         
                         Tuple<Color, Color, string> tempTuple = new Tuple<Color, Color, string>(tileColor, otherColor, _processor.GetDirectionName(direction));
-                        // Debug.Log("TEMP TUPLE: " + tempTuple.Item1 + ", " + tempTuple.Item2 + ", " + tempTuple.Item3);
-
+                        Debug.Log($"Temp Tuple: {_processor.GetColorLetter(tempTuple.Item1)}, {_processor.GetColorLetter(tempTuple.Item2)}, {tempTuple.Item3}");
                         
                         // get all the tuples in the list of possible pairs
                         foreach (Tuple<Color,Color,string> dataTuple in _processor.GetTilePairs())
                         {
                             if (CompareTuple(dataTuple, tempTuple))
                             {
-                                // Debug.Log("PAIR FOUND");
+                                Debug.Log("PAIR FOUND");
                                 foundPair = true;
                                 break;
                             }
@@ -390,13 +395,21 @@ public class GameController : MonoBehaviour
                         
                         if (!foundPair)
                         {
+                            Debug.Log("Set to False: " + _processor.GetColorLetter(otherColor));
+                            
                             neighborTile.UpdateSuperposition(otherColor, false);
                             // stack.Push(neighborTile); // this might add multiple times?
                         }
                     }
                     // Debug.Log("OTHER " + _processor.GetDirectionName(direction) + ": " + neighborTile.GetAllowedColors().Count);
+
+                    // break; // foreach (Color otherColor in neighborTile.GetAllowedColors()) 
                 }
+
+                // break; // foreach (Vector2Int direction in directions)
             }
+
+            // break; // just do the propagation only for the main tile
         }
     }
 
