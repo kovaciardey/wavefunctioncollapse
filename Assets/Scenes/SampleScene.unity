@@ -365,13 +365,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   input: {fileID: 2800000, guid: b89ed4fec73a1c742b904dcf0b10f417, type: 3}
-  width: 25
+  width: 20
   floatComparisonTolerance: 0.00005
   inputDisplay: {fileID: 2086748563}
   outputDisplay: {fileID: 1737845382}
   tileWeightParent: {fileID: 378442277}
   tileWeightDisplayPrefab: {fileID: 9107379435959950293, guid: 9a53e59e1d3165848b980ceb3a5e7373, type: 3}
-  slowdownFactor: 3
+  slowdownFactor: 2
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

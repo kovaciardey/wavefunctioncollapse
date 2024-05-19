@@ -21,6 +21,8 @@ public class ImageProcessor
 	private Dictionary<Color, int> _colorCounts;
 	private Dictionary<Color, float> _colorWeights;
 	private Dictionary<Color, string> _colorWeightsDisplay;
+
+	private Dictionary<Color, char> _colorLetterDictionary;
 	
 	// The tuple contains items as follows:
 	// neighbour, current, direction
@@ -83,6 +85,8 @@ public class ImageProcessor
 		CalculateAllowedNeighbors();
 		
 		_importer.isReadable = false;
+		
+		CalculateLetters();
 	}
 	
 	// creates a Color array from all the possible keys in the "counts" array
@@ -171,6 +175,9 @@ public class ImageProcessor
 	
     // create a dictionary
     // Color, Dictionary<string, List<Color>>
+    // this is just another way of representing the neighbours as
+    // as a KVP Colour => ["direction" => [Colour]]
+    // rather than relying on the lit of pairs
     private void CalculateAllowedNeighbors()
     {
 	    _allowedNeighbors = new Dictionary<Color, Dictionary<string, List<Color>>>();
@@ -236,5 +243,43 @@ public class ImageProcessor
 	public Dictionary<Color, Dictionary<string, List<Color>>> GetAllowedNeighbors()
 	{
 		return _allowedNeighbors;
+	}
+	
+	// can do this when calculating the colours.. but will refactor later
+	private void CalculateLetters()
+	{
+		_colorLetterDictionary = new Dictionary<Color, char>();
+		char currentLetter = 'A';
+		
+		foreach (Color color in _uniqueColors)
+		{
+			// shouldn't really be reached
+			if (currentLetter > 'Z')
+			{
+				Debug.LogWarning("Exceeded the number of available letters (A-Z). Some colors won't be assigned a letter.");
+				break;
+			}
+
+			_colorLetterDictionary[color] = currentLetter;
+			currentLetter++;
+		}
+		
+		// foreach (KeyValuePair<Color, char> entry in colorLetterDictionary)
+		// {
+		// 	Debug.Log($"Color {entry.Key} is assigned to letter {entry.Value}");
+		// }
+		
+		// int counter = 0;
+		// foreach (Tuple<Color,Color,string> pair in _uniquePairs)
+		// {
+		// 	Debug.Log($"Pair {counter}: {colorLetterDictionary[pair.Item1]}, {colorLetterDictionary[pair.Item2]}, {pair.Item3}");
+		//
+		// 	counter += 1;
+		// }
+	}
+
+	public char GetColorLetter(Color color)
+	{
+		return _colorLetterDictionary[color];
 	}
 }

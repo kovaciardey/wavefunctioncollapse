@@ -82,13 +82,14 @@ public class GameController : MonoBehaviour
         // TODO: move all these commented out debug functions to somewhere else
         
         // debug - all the unique tiles
-        // foreach (Color color in processor.GetUniqueTiles())
+        // foreach (Color color in _processor.GetUniqueTiles())
         // {
         //     Debug.Log(color);
         // }
         
         // debug - all the unique pairs
-        // foreach (Tuple<Color, Color, string> pair in processor.GetTilePairs())
+        // Debug.Log(_processor.GetTilePairs().Count);
+        // foreach (Tuple<Color, Color, string> pair in _processor.GetTilePairs())
         // {
         //     Debug.Log("Unique Pair Added: " + pair.Item1 + ", " + pair.Item2 + ", " + pair.Item3);
         // }
@@ -169,10 +170,10 @@ public class GameController : MonoBehaviour
         int iteration = 0;
         while (HasUncollapsed())
         {
-            if (iteration == 10)
-            {
-                break;
-            }
+            // if (iteration == 0)
+            // {
+            //     break;
+            // }
             
             MapTile randomTile = GetRandomUncollapsedWithTheLowestEntropy();
             
@@ -183,7 +184,7 @@ public class GameController : MonoBehaviour
             
             CollapseAtCoords(randomTile.GetCoords());
 
-            // iteration += 1;
+            iteration += 1;
             
             // a value of 1 means 5s..?
             // will need a rethink
@@ -333,6 +334,16 @@ public class GameController : MonoBehaviour
         {
             MapTile currentTile = stack.Pop();
             
+            // Debug.Log("Current tile: " + _processor.GetColorLetter(currentTile.GetAllowedColors()));
+            // Debug.Log("Allowed Neighbours");
+            //
+            // foreach (Color tileColor in currentTile.GetAllowedColors())
+            // {
+            //     Debug.Log(_processor.GetColorLetter(tileColor));
+            // }
+            //
+            // break;
+            
             foreach (Vector2Int direction in directions)
             {
                 Vector2Int neighborCoords = currentTile.GetCoords() + direction;
@@ -352,7 +363,7 @@ public class GameController : MonoBehaviour
                 
                 // Debug.Log("OTHER " + _processor.GetDirectionName(direction) + ": " + neighborTile.GetAllowedColors().Count);
                 // this is kinda ugly :)) 
-                foreach (Color otherColor in neighborTile.GetAllowedColors())
+                foreach (Color otherColor in neighborTile.GetAllowedColors()) 
                 {
                     // Debug.Log("OTHER " + _processor.GetDirectionName(direction) + ": " + otherColor);
                     

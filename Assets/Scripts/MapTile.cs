@@ -76,7 +76,9 @@ public class MapTile
 		// Set the selected color to true
 		TileSuperpositions[selectedColor] = true;
 	}
-
+	
+	// returns the color the tile should have when it is being drawn on the texture
+	// it has nothing to do with the calculation of the WFC. just for display
 	public Color GetSelectedColor()
 	{
 		if (!IsCollapsed)
