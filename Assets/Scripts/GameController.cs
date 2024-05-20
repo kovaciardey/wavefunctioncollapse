@@ -37,6 +37,8 @@ using Random = UnityEngine.Random;
  *
  *  - figure out the bullshit issue with importing the images to make sure they're point
  *      filtered so we only deal with the wanted colours
+ *
+ *  - QUESTION: would I be able to extend this to irregular shapes? that aren't necessarily squares?
  * 
  */
 
@@ -86,12 +88,16 @@ public class GameController : MonoBehaviour
     public float floatComparisonTolerance = 0.00005f;
     
     [Header("Display")]
-    public RawImage inputDisplay;
+    public Image inputDisplay;
     public RawImage outputDisplay;
     public Transform tileWeightParent;
     public GameObject tileWeightDisplayPrefab;
+
+    [Header("Display Settings")] 
+    public float inputDisplayWidth = 200f;
     
     // rethink this bit here cos it's not working as I imagined
+    [Header("Simulation Settings")] 
     [Range(1, 10)]
     public int slowdownFactor;
 
@@ -111,18 +117,44 @@ public class GameController : MonoBehaviour
     }
     
     /**
-     * Display the Input Image on the Display Panel
+     * Display the Input Image on the Display Panel.
+     * Draw the texture in a fixed width square maintaining aspect ratio
      */
     private void DrawInputPanel()
     {
-        inputDisplay.texture = input;
+        // Set the sprite of the Image component to the texture
+        inputDisplay.sprite = Sprite.Create(input, new Rect(0, 0, input.width, input.height), new Vector2(0.5f, 0.5f));
         
-        // on the inputDisplay object I need to set the width and the height.
-        // It appears that this just takes the dimensions of the input image and 
-        //  multiplies them by the values that are manually set in the inspector
+        // Get the dimensions of the texture
+        float textureWidth = input.width;
+        float textureHeight = input.height;
+
+        // Calculate the aspect ratio
+        float aspectRatio = textureWidth / textureHeight;
+
+        // Calculate the dimensions of the image to fit within the 200x200 panel while maintaining aspect ratio
+        float panelWidth = inputDisplayWidth;
+        float panelHeight = inputDisplayWidth;
+
+        float newWidth;
+        float newHeight;
         
-        // I could try to set a fixed height to the input and 
-        inputDisplay.transform.localScale = new Vector3 (input.width, input.height, 1);
+        if (aspectRatio > 1)
+        {
+            // Texture is wider than tall
+            newWidth = panelWidth;
+            newHeight = panelWidth / aspectRatio;
+        }
+        else
+        {
+            // Texture is taller than wide or square
+            newHeight = panelHeight;
+            newWidth = panelHeight * aspectRatio;
+        }
+
+        // Set the size of the RectTransform of the Image component
+        RectTransform imageRectTransform = inputDisplay.GetComponent<RectTransform>();
+        imageRectTransform.sizeDelta = new Vector2(newWidth, newHeight);
     }
     
     /**
