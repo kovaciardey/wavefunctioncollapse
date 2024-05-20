@@ -98,8 +98,8 @@ public class GameController : MonoBehaviour
     
     // rethink this bit here cos it's not working as I imagined
     [Header("Simulation Settings")] 
-    [Range(1, 10)]
-    public int slowdownFactor;
+    [Range(1f, 300f)]
+    public float slowdownFactor;
 
     private ImageProcessor _processor;
     private MapTile[] _wfcMap;
@@ -291,9 +291,7 @@ public class GameController : MonoBehaviour
 
             iteration += 1;
             
-            // a value of 1 means 5s..?
-            // will need a rethink
-            yield return new WaitForSeconds(5f / (float) Math.Pow(10, slowdownFactor));
+            yield return new WaitForSeconds(1f / slowdownFactor);
         }
         
         // for the future, trigger a flag or smth so that it stops the coroutine when the wfc stops
