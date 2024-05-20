@@ -7,6 +7,75 @@ using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
+/**
+ *
+ * BIG TODO:
+ *  - have a look over the code:
+ *      review and refactor where necessary
+ *          I like the idea with an calculateIteration function
+ *      add some extra comments if needed
+ *
+ *  - a system which records the moves and the logs for each move
+ *      so they can be displayed step by step via a slider
+ *
+ *      - a way to load that information from the file (should only be done on demand, will have a toggle or smth)
+ *      mostly for debugging purposes
+ *
+ *  - refactor this to work with letters in the background
+ *      assign the images to the letters in post processing
+ *      (especially if the above system is implemented)
+ *
+ *  - try to understand the and figure out the bug with that one image
+ * 
+ *  - statistics about efficiency
+ *      time for execution, nr of loops and so on
+ *      entropy calculations
+ *
+ *  - add 2 * 2 support (which wil try to be translated into n * n)
+ *
+ *  - if I do the above thing with the letters, I will need to do a lot of work with the rotations and the symmetries
+ *
+ *  - figure out the bullshit issue with importing the images to make sure they're point
+ *      filtered so we only deal with the wanted colours
+ * 
+ */
+
+/**
+ * NOTES FOR THE REFACTOR:
+ *
+ *  git Ignore the files with the images
+ * 
+ *  ImageProcessor.cs
+ *
+ *
+ *  GameController.cs
+ *
+ *
+ *  MapTile.cs
+ *
+ *
+ *  NEW SCRIPTS:
+ *      - add a "Model" class, will call a bit better
+ *      - add a WaveFunction class which holds the map, the tiles, the weights
+ */
+
+/**
+ * Ideas for optimization
+ *         // i think one possible optimization for the entropy would be not to calculate the entropy for the tiles
+        //  which still have all the possible values 
+
+        // or could we rather precalculate the entropies based on all the possible combinations of tiles?
+        // it might work for simpler input images which don't have too many possible combinations
+        // but it might be worth trying it out, see how it performs
+            // this might not work, cos what if there are tiles which can have all possible neighbours?
+            // this might be a bit of an edge case tho
+        
+        // or maybe keep track of the uncollapsed tiles in a separate array and only iterate through that
+
+        // maybe adding more debug info and values on the screen? 
+        //  what sort of things would be useful?
+            // could hover the mouse over a pixel and see some data about it, like status, entropy and all the stuff
+ */
 public class GameController : MonoBehaviour
 {
     public Texture2D input;
@@ -15,9 +84,6 @@ public class GameController : MonoBehaviour
     public int width = 5;
 
     public float floatComparisonTolerance = 0.00005f;
-    
-    // this is not used anymore, will keep for a later date when I actually enable blocks and stuff
-    // public int nValue = 1;
     
     [Header("Display")]
     public RawImage inputDisplay;
@@ -28,8 +94,6 @@ public class GameController : MonoBehaviour
     // rethink this bit here cos it's not working as I imagined
     [Range(1, 10)]
     public int slowdownFactor;
-    
-    // I could maybe add a setting here to say which background color to use
 
     private ImageProcessor _processor;
     private MapTile[] _wfcMap;
@@ -37,31 +101,35 @@ public class GameController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        DrawInputPanel();
+        
+        ProcessInput();
+
+        DrawTileWeightPanels();
+        
+        GenerateWithDelay(_processor.GetUniqueTiles());
+    }
+    
+    /**
+     * Display the Input Image on the Display Panel
+     */
+    private void DrawInputPanel()
+    {
         inputDisplay.texture = input;
         
         // on the inputDisplay object I need to set the width and the height.
         // It appears that this just takes the dimensions of the input image and 
         //  multiplies them by the values that are manually set in the inspector
+        
+        // I could try to set a fixed height to the input and 
         inputDisplay.transform.localScale = new Vector3 (input.width, input.height, 1);
-        
-        // now i process the input image
-        _processor = new ImageProcessor(input);
-
-        // and calculate all possible tile colours 
-        _processor.Process();
-        
-        // debug - tile Count
-        // foreach (KeyValuePair<Color, int> kvp in processor.GetTileCount())
-        // {
-        //     Debug.Log("Color: " + kvp.Key + ", Count: " + kvp.Value);
-        // }
-        
-        // debug - weights as float
-        // foreach (KeyValuePair<Color, float> kvp in processor.GetTileWeights())
-        // {
-        //     Debug.Log("Color: " + kvp.Key + ", Weight: " + kvp.Value);
-        // }
-        
+    }
+    
+    /**
+     * Display the processed tiles and their weights
+     */
+    private void DrawTileWeightPanels()
+    {
         // show the weights as a fraction on the screen
         int index = 0;
         foreach (KeyValuePair<Color, string> kvp in _processor.GetTileWeightsDisplay())
@@ -78,8 +146,33 @@ public class GameController : MonoBehaviour
 
             index += 1;
         }
+    }
+    
+    /**
+     * Process the input image 
+     */
+    private void ProcessInput()
+    {
+        _processor = new ImageProcessor(input);
+        _processor.Process();
+    }
+    
+    /**
+     * Just moved all those things to this function for now
+     */
+    private void RandomDebugs()
+    {
+        // debug - tile Count
+        // foreach (KeyValuePair<Color, int> kvp in processor.GetTileCount())
+        // {
+        //     Debug.Log("Color: " + kvp.Key + ", Count: " + kvp.Value);
+        // }
         
-        // TODO: move all these commented out debug functions to somewhere else
+        // debug - weights as float
+        // foreach (KeyValuePair<Color, float> kvp in processor.GetTileWeights())
+        // {
+        //     Debug.Log("Color: " + kvp.Key + ", Weight: " + kvp.Value);
+        // }
         
         // debug - all the unique tiles
         // foreach (Color color in _processor.GetUniqueTiles())
@@ -115,27 +208,7 @@ public class GameController : MonoBehaviour
         //     
         //     Debug.Log(debugString);
         // }
-        
-        GenerateWithDelay(_processor.GetUniqueTiles());
-        
-        
-        // when refactoring make a separate class for the WFC algorithm
-        
 
-        // i think one possible optimization for the entropy would be not to calculate the entropy for the tiles
-        //  which still have all the possible values 
-
-        // or could we rather precalculate the entropies based on all the possible combinations of tiles?
-        // it might work for simpler input images which don't have too many possible combinations
-        // but it might be worth trying it out, see how it performs
-            // this might not work, cos what if there are tiles which can have all possible neighbours?
-            // this might be a bit of an edge case tho
-        
-        // or maybe keep track of the uncollapsed tiles in a separate array and only iterate through that
-
-        // maybe adding more debug info and values on the screen? 
-        //  what sort of things would be useful?
-            // could hover the mouse over a pixel and see some data about it, like status, entropy and all the stuff
     }
 
     // Update is called once per frame
@@ -170,8 +243,6 @@ public class GameController : MonoBehaviour
         int iteration = 0;
         while (HasUncollapsed())
         {
-            // kjhsdklfjghksdjlfhgkljsdfhg
-            
             // if (iteration == 0)
             // {
             //     break;
@@ -282,6 +353,8 @@ public class GameController : MonoBehaviour
         foreach (MapTile mapTile in _wfcMap)
         {
             if (mapTile.IsCollapsed) { continue; }
+            
+            // need to have a look at adding the noise here
             
             if (Math.Abs(CalculateShannonEntropy(mapTile, _processor.GetTileWeights()) - lowestEntropy) < floatComparisonTolerance)
             {
