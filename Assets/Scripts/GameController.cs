@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UI;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -15,6 +14,8 @@ using Random = UnityEngine.Random;
  *          I like the idea with an calculateIteration function
  *      add some extra comments if needed
  *
+ *      Also fix the direction of the output image to make sure the direction vectors point in the directions they define
+ *
  *  - a system which records the moves and the logs for each move
  *      so they can be displayed step by step via a slider
  *
@@ -25,7 +26,19 @@ using Random = UnityEngine.Random;
  *      assign the images to the letters in post processing
  *      (especially if the above system is implemented)
  *
- *  - try to understand the and figure out the bug with that one image
+ *  - try to understand the and figure out the issue
+ *      it's not just that one image..
+ *      there may be multiple reasons for this, but the likeliest is that once in a while,
+ *      the wave function of a tile gets collapsed to sand while it is surrounded by grass tiles
+ *      and there isn't a pair possible to satisfy both the sand on one side and the grass on another..
+ *
+ *      ditto with the ocean tiles
+ *
+ *      quite likely a drawback of the simplistic nature of the 1 * 1 tile
+ *
+ *      also, it seems to be the issues are the margin tiles, which don't have a possible neighbor there
+ *
+ *      idk if there's much else I can do about this 1 * 1 version of the algorithm. I might as well just move one to an n*n implementation 
  * 
  *  - statistics about efficiency
  *      time for execution, nr of loops and so on
@@ -251,6 +264,8 @@ public class GameController : MonoBehaviour
 
     private void GenerateWithDelay(Color[] colors)
     {
+        // TODO: make WaveFunction class and move all this code
+        
         // initialise the output map
         _wfcMap = new MapTile[width * width];
         for (int j = 0; j < width; j += 1)
