@@ -17,7 +17,7 @@ using Random = UnityEngine.Random;
  *      Also fix the direction of the output image to make sure the direction vectors point in the directions they define
  *
  *  - a system which records the moves and the logs for each move
- *      so they can be displayed step by step via a slider
+ *      so they can be displayed step by step via a slider while the simulation is not running anymore
  *
  *      - a way to load that information from the file (should only be done on demand, will have a toggle or smth)
  *      mostly for debugging purposes
@@ -25,20 +25,6 @@ using Random = UnityEngine.Random;
  *  - refactor this to work with letters in the background
  *      assign the images to the letters in post processing
  *      (especially if the above system is implemented)
- *
- *  - try to understand the and figure out the issue
- *      it's not just that one image..
- *      there may be multiple reasons for this, but the likeliest is that once in a while,
- *      the wave function of a tile gets collapsed to sand while it is surrounded by grass tiles
- *      and there isn't a pair possible to satisfy both the sand on one side and the grass on another..
- *
- *      ditto with the ocean tiles
- *
- *      quite likely a drawback of the simplistic nature of the 1 * 1 tile
- *
- *      also, it seems to be the issues are the margin tiles, which don't have a possible neighbor there
- *
- *      idk if there's much else I can do about this 1 * 1 version of the algorithm. I might as well just move one to an n*n implementation 
  * 
  *  - statistics about efficiency
  *      time for execution, nr of loops and so on
@@ -117,7 +103,6 @@ public class GameController : MonoBehaviour
     private ImageProcessor _processor;
     private MapTile[] _wfcMap;
     
-    // Start is called before the first frame update
     void Start()
     {
         DrawInputPanel();
@@ -127,6 +112,11 @@ public class GameController : MonoBehaviour
         DrawTileWeightPanels();
         
         GenerateWithDelay(_processor.GetUniqueTiles());
+    }
+    
+    void Update()
+    {
+        DrawTexture(GetColorMap());
     }
     
     /**
@@ -255,28 +245,12 @@ public class GameController : MonoBehaviour
         // }
 
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        DrawTexture(GetColorMap());
-    }
-
+    
     private void GenerateWithDelay(Color[] colors)
     {
-        // TODO: make WaveFunction class and move all this code
-        
-        // initialise the output map
-        _wfcMap = new MapTile[width * width];
-        for (int j = 0; j < width; j += 1)
-        {
-            for (int i = 0; i < width; i += 1)
-            {
-                Vector2Int coords = new Vector2Int(i, j);
+        WaveFunction wf = new WaveFunction(width, colors);
 
-                _wfcMap[GetArrayIndexFromCoords(coords)] = new MapTile(coords, colors);
-            }
-        }
+        _wfcMap = wf.GetMap();
         
         StartCoroutine(GetAnimateWfc());
     }
