@@ -14,13 +14,14 @@ using Random = UnityEngine.Random;
  *          I like the idea with an calculateIteration function
  *      add some extra comments if needed
  *
- *      Also fix the direction of the output image to make sure the direction vectors point in the directions they define
- *
  *  - a system which records the moves and the logs for each move
  *      so they can be displayed step by step via a slider while the simulation is not running anymore
  *
+ *      for the future, one Idea would be to stop at a specific step, manually add collapse a few tiles and see what happens from there
+ *
  *      - a way to load that information from the file (should only be done on demand, will have a toggle or smth)
  *      mostly for debugging purposes
+ *          I don't think it will have any real benefit on performance. I might still implement it just to see how unity works with files
  *
  *  - refactor this to work with letters in the background
  *      assign the images to the letters in post processing
@@ -31,33 +32,17 @@ using Random = UnityEngine.Random;
  *      entropy calculations
  *
  *  - add 2 * 2 support (which wil try to be translated into n * n)
+ *      initially it should not worry about different rotations
  *
  *  - if I do the above thing with the letters, I will need to do a lot of work with the rotations and the symmetries
  *
  *  - figure out the bullshit issue with importing the images to make sure they're point
  *      filtered so we only deal with the wanted colours
  *
+ *  A menu in game that allows me to see all the pairs somehow, and maybe allows me to enable/disable a specific pair?
+ *
  *  - QUESTION: would I be able to extend this to irregular shapes? that aren't necessarily squares?
  * 
- */
-
-/**
- * NOTES FOR THE REFACTOR:
- *
- *  git Ignore the files with the images
- * 
- *  ImageProcessor.cs
- *
- *
- *  GameController.cs
- *
- *
- *  MapTile.cs
- *
- *
- *  NEW SCRIPTS:
- *      - add a "Model" class, will call a bit better
- *      - add a WaveFunction class which holds the map, the tiles, the weights
  */
 
 /**
@@ -76,6 +61,9 @@ using Random = UnityEngine.Random;
         // maybe adding more debug info and values on the screen? 
         //  what sort of things would be useful?
             // could hover the mouse over a pixel and see some data about it, like status, entropy and all the stuff
+            
+        // for the HasUncollapsed function, maybe have a tile counter which counts down(?) from the max nr of tiles, 
+            everytime a tile gets collapsed. once it reaches 0 returns false. so I don't have to iterate through the array everytime  
  */
 public class GameController : MonoBehaviour
 {
@@ -102,6 +90,8 @@ public class GameController : MonoBehaviour
 
     private ImageProcessor _processor;
     private MapTile[] _wfcMap;
+
+    private WaveFunction _wf;
     
     void Start()
     {
@@ -246,15 +236,17 @@ public class GameController : MonoBehaviour
 
     }
     
+    // "Model"
     private void GenerateWithDelay(Color[] colors)
     {
-        WaveFunction wf = new WaveFunction(width, colors);
+        _wf = new WaveFunction(width, colors);
 
-        _wfcMap = wf.GetMap();
+        _wfcMap = _wf.GetMap();
         
         StartCoroutine(GetAnimateWfc());
     }
     
+    // "Model"
     private IEnumerator GetAnimateWfc()
     {
         // collapse first
@@ -262,7 +254,7 @@ public class GameController : MonoBehaviour
         
         // do wfc
         int iteration = 0;
-        while (HasUncollapsed())
+        while (_wf.HasUncollapsed())
         {
             // if (iteration == 0)
             // {
@@ -285,7 +277,8 @@ public class GameController : MonoBehaviour
         
         // for the future, trigger a flag or smth so that it stops the coroutine when the wfc stops
     }
-
+    
+    // WFC
     private float CalculateShannonEntropy(MapTile tile, Dictionary<Color, float> weights)
     {
         float sumOfWeights = 0;
@@ -303,7 +296,8 @@ public class GameController : MonoBehaviour
 
         return (float) Math.Log(sumOfWeights) - (sumOfWeightLogWeights / sumOfWeights);
     }
-
+    
+    // WFC
     private Color[] GetColorMap()
     {
         Color[] outputColorMap = new Color[width * width];
@@ -319,7 +313,8 @@ public class GameController : MonoBehaviour
     {
         return coords.x * width + coords.y;
     }
-
+    
+    
     private void DrawTexture(Color[] colorMap)
     {
         Texture2D texture = new Texture2D (width, width)
@@ -334,21 +329,7 @@ public class GameController : MonoBehaviour
         outputDisplay.texture = texture;
     }
     
-    // returns true if the grid has nod been filled yet
-    public bool HasUncollapsed()
-    {
-        foreach (MapTile tile in _wfcMap) 
-        {
-            // the first uncollapsed tile it encounters returns true
-            if (!tile.IsCollapsed)
-            {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
+    // WFC
     public MapTile GetRandomUncollapsedWithTheLowestEntropy()
     {
         float lowestEntropy = Mathf.Infinity;
@@ -390,7 +371,8 @@ public class GameController : MonoBehaviour
 
         return randomSelectedTileVersionOne;
     }
-
+    
+    // WFC
     public void CollapseAtCoords(Vector2Int coords)
     {
         MapTile tile = _wfcMap[GetArrayIndexFromCoords(coords)];
@@ -504,7 +486,8 @@ public class GameController : MonoBehaviour
             // break; // just do the propagation only for the main tile
         }
     }
-
+    
+    // WFC
     private bool CompareTuple(
         Tuple<Color, Color, string> dataTuple, 
         Tuple<Color, Color, string> tempTuple
@@ -514,7 +497,8 @@ public class GameController : MonoBehaviour
                dataTuple.Item2 == tempTuple.Item2 &&
                dataTuple.Item3 == tempTuple.Item3;
     }
-
+    
+    // WFC
     private bool InGrid(Vector2Int coords)
     {
         // Check if both x and y components are within the bounds of the grid

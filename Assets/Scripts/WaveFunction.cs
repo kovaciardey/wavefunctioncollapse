@@ -18,6 +18,32 @@ public class WaveFunction
 		
 		InitialiseGrid();
 	}
+	
+	// returns true if the grid has nod been filled yet
+	public bool HasUncollapsed()
+	{
+		foreach (MapTile tile in _grid) 
+		{
+			// the first uncollapsed tile it encounters returns true
+			if (!tile.IsCollapsed)
+			{
+				return true;
+			}
+		}
+        
+		return false;
+	}
+
+	// public void Iterate()
+	// {
+	// 	// collapse first
+	// 	CollapseAtCoords(GetRandomUncollapsedWithTheLowestEntropy().GetCoords());
+	// }
+	
+	public MapTile[] GetMap()
+	{
+		return _grid;
+	}
 
 	private void InitialiseGrid()
 	{
@@ -32,10 +58,5 @@ public class WaveFunction
 				_grid[CustomUtils.GetArrayIndexFromCoords(coords, _width)] = new MapTile(coords, _colors);
 			}
 		}
-	}
-
-	public MapTile[] GetMap()
-	{
-		return _grid;
 	}
 }
