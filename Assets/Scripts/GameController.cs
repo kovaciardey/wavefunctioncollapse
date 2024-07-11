@@ -81,6 +81,10 @@ public class GameController : MonoBehaviour
     public RawImage outputDisplay;
     public Transform tileWeightParent;
     public GameObject tileWeightDisplayPrefab;
+    public Text buttonText;
+
+    public String startTextValue = "Start";
+    public String resetTextValue = "Reset";
 
     [Header("Display Settings")] 
     public float inputDisplayWidth = 200f;
@@ -91,9 +95,10 @@ public class GameController : MonoBehaviour
     public float slowdownFactor;
 
     private ImageProcessor _processor;
-    private MapTile[] _wfcMap;
 
     private WaveFunction _wf;
+    
+    private bool _isGenerating = false;
     
     void Start()
     {
@@ -102,15 +107,33 @@ public class GameController : MonoBehaviour
         ProcessInput();
 
         DrawTileWeightPanels();
-        
-        GenerateWithDelay(_processor.GetUniqueTiles());
+
     }
     
     void Update()
     {
-        DrawTexture(_wf.GetColorMap());
+        if (_isGenerating)
+        {
+            DrawTexture(_wf.GetColorMap());
+        }
     }
-    
+
+    public void StartSimulation()
+    {
+        // ResetSimulation();
+
+        _isGenerating = true;
+        
+        GenerateWithDelay(_processor.GetUniqueTiles());
+    }
+
+    public void StopSimulation()
+    {
+        _isGenerating = false;
+
+        StopCoroutine(GetAnimateWfc());
+    }
+
     /**
      * Display the Input Image on the Display Panel.
      * Draw the texture in a fixed width square maintaining aspect ratio
@@ -242,8 +265,6 @@ public class GameController : MonoBehaviour
     private void GenerateWithDelay(Color[] colors)
     {
         _wf = new WaveFunction(width, colors, _processor, floatComparisonTolerance);
-
-        _wfcMap = _wf.GetMap();
         
         StartCoroutine(GetAnimateWfc());
     }
@@ -263,6 +284,11 @@ public class GameController : MonoBehaviour
             // {
             //     break;
             // }
+
+            if (!_isGenerating)
+            {
+                break;
+            }
             
             MapTile randomTile = _wf.GetRandomUncollapsedWithTheLowestEntropy();
             

@@ -76,7 +76,7 @@ public class ImageProcessor
 		}
 		
 		// calculate all the pairs between the tiles and the direction
-		// aka the 3 tuples
+		// aka the 3-tuples
 
 		CalculateColors();
 		

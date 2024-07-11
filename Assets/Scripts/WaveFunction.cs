@@ -242,35 +242,14 @@ public class WaveFunction
         }
     }
     
-    // WFC
-    private bool CompareTuple(
-        Tuple<Color, Color, string> dataTuple, 
-        Tuple<Color, Color, string> tempTuple
-    )
-    {
-        return dataTuple.Item1 == tempTuple.Item1 && 
-               dataTuple.Item2 == tempTuple.Item2 &&
-               dataTuple.Item3 == tempTuple.Item3;
-    }
-    
-    // WFC
-    private bool InGrid(Vector2Int coords)
-    {
-        // Check if both x and y components are within the bounds of the grid
-        // need to put height here when 
-        if (coords.x >= 0 && coords.x < _width && coords.y >= 0 && coords.y < _width)
-        {
-            return true; // Position is within the square grid
-        }
-        
-        return false; // Position is outside the square grid
-    }
-	
 	public MapTile[] GetMap()
 	{
 		return _grid;
 	}
-
+	
+	/**
+	 * Initialise the _grid new instances of MapTile for each coord
+	 */
 	private void InitialiseGrid()
 	{
 		// initialise the output map
@@ -284,5 +263,33 @@ public class WaveFunction
 				_grid[CustomUtils.GetArrayIndexFromCoords(coords, _width)] = new MapTile(coords, _colors);
 			}
 		}
+	}
+	
+	/**
+	 * Checks if a set of coords in within the bounds of the grid
+	 */
+	private bool InGrid(Vector2Int coords)
+	{
+		// need to put height here when making n * m shape
+		
+		if (coords.x >= 0 && coords.x < _width && coords.y >= 0 && coords.y < _width)
+		{
+			return true; 
+		}
+        
+		return false; 
+	}
+	
+	/**
+	 * Checks if the pair of 3-tuples are identical
+	 */
+	private bool CompareTuple(
+		Tuple<Color, Color, string> dataTuple, 
+		Tuple<Color, Color, string> tempTuple
+	)
+	{
+		return dataTuple.Item1 == tempTuple.Item1 && 
+		       dataTuple.Item2 == tempTuple.Item2 &&
+		       dataTuple.Item3 == tempTuple.Item3;
 	}
 }
