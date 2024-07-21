@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,7 +23,9 @@ public class ImageProcessor
 	private Dictionary<Color, float> _colorWeights;
 	private Dictionary<Color, string> _colorWeightsDisplay;
 
-	private Dictionary<Color, char> _colorLetterDictionary;
+	private Dictionary<Color, char> _colorLetterMap;
+	private Dictionary<char, int> _letterCounts;
+	private char[] _letters; // the letter representation of the input image colour array
 	
 	// The tuple contains items as follows:
 	// neighbour, current, direction
@@ -50,9 +53,56 @@ public class ImageProcessor
 	{
 		_importer.isReadable = true;
 		AssetDatabase.ImportAsset(_assetPath);
-
+		
+		// idk it matters, but this array stores the pixel indexes starting from the bottom left of the input image 
 		Color[] colors = _original.GetPixels();
 		int totalPixels = colors.Length;
+		
+		_colorLetterMap = new Dictionary<Color, char>();
+		_letterCounts = new Dictionary<char, int>();
+		_letters = new char[totalPixels];
+		
+		char currentLetter = 'A';
+		int index = 0;
+		
+		foreach (Color color in colors)
+		{
+			// shouldn't really be reached cos the input maps are simple enough
+			if (currentLetter > 'Z')
+			{
+				Debug.LogWarning("Exceeded the number of available letters (A-Z). Some colors won't be assigned a letter.");
+				break;
+			} 
+			
+			// create letter map
+			if (_colorLetterMap.TryAdd(color, currentLetter))
+			{
+				currentLetter++;
+			}
+			
+			// 
+			if (_colorLetterMap.TryGetValue(color, out char letter))
+			{
+				if (!_letterCounts.TryAdd(letter, 1))
+				{
+					_letterCounts[letter] += 1;
+				}
+			}
+
+			_letters[index] = _colorLetterMap[color];
+
+			index += 1;
+		}
+		
+		CustomUtils.DebugArray(_colorLetterMap.Keys.ToArray());
+		CustomUtils.DebugArray(_colorLetterMap.Values.ToArray());
+		
+		CustomUtils.DebugArray(_letterCounts.Keys.ToArray());
+		CustomUtils.DebugArray(_letterCounts.Values.ToArray());
+		
+		CustomUtils.DebugArray(_letters);
+		
+		
 		
 		_colorCounts = new Dictionary<Color, int>();
 		
@@ -85,8 +135,6 @@ public class ImageProcessor
 		CalculateAllowedNeighbors();
 		
 		_importer.isReadable = false;
-		
-		CalculateLetters();
 	}
 	
 	// creates a Color array from all the possible keys in the "counts" array
@@ -243,43 +291,5 @@ public class ImageProcessor
 	public Dictionary<Color, Dictionary<string, List<Color>>> GetAllowedNeighbors()
 	{
 		return _allowedNeighbors;
-	}
-	
-	// can do this when calculating the colours.. but will refactor later
-	private void CalculateLetters()
-	{
-		_colorLetterDictionary = new Dictionary<Color, char>();
-		char currentLetter = 'A';
-		
-		foreach (Color color in _uniqueColors)
-		{
-			// shouldn't really be reached
-			if (currentLetter > 'Z')
-			{
-				Debug.LogWarning("Exceeded the number of available letters (A-Z). Some colors won't be assigned a letter.");
-				break;
-			}
-
-			_colorLetterDictionary[color] = currentLetter;
-			currentLetter++;
-		}
-		
-		// foreach (KeyValuePair<Color, char> entry in colorLetterDictionary)
-		// {
-		// 	Debug.Log($"Color {entry.Key} is assigned to letter {entry.Value}");
-		// }
-		
-		// int counter = 0;
-		// foreach (Tuple<Color,Color,string> pair in _uniquePairs)
-		// {
-		// 	Debug.Log($"Pair {counter}: {colorLetterDictionary[pair.Item1]}, {colorLetterDictionary[pair.Item2]}, {pair.Item3}");
-		//
-		// 	counter += 1;
-		// }
-	}
-
-	public char GetColorLetter(Color color)
-	{
-		return _colorLetterDictionary[color];
 	}
 }

@@ -165,7 +165,7 @@ public class WaveFunction
         {
             MapTile currentTile = stack.Pop();
             
-            Debug.Log("TILE " + _processor.GetColorLetter(currentTile.GetAllowedColors()[0]));
+            // Debug.Log("TILE " + _processor.GetColorLetter(currentTile.GetAllowedColors()[0]));
             // Debug.Log("Allowed Neighbours");
             //
             // foreach (Color tileColor in currentTile.GetAllowedColors())
@@ -177,7 +177,7 @@ public class WaveFunction
             
             foreach (Vector2Int direction in directions)
             {
-                Debug.Log(_processor.GetDirectionName(direction).ToUpper() + " - " + _processor.GetColorLetter(currentTile.GetAllowedColors()[0]) + "===================================================================================");
+                // Debug.Log(_processor.GetDirectionName(direction).ToUpper() + " - " + _processor.GetColorLetter(currentTile.GetAllowedColors()[0]) + "===================================================================================");
                 
                 Vector2Int neighborCoords = currentTile.GetCoords() + direction;
                 
@@ -209,7 +209,7 @@ public class WaveFunction
                         // Debug.Log("TILE: " + tileColor);
                         
                         Tuple<Color, Color, string> tempTuple = new Tuple<Color, Color, string>(tileColor, otherColor, _processor.GetDirectionName(direction));
-                        Debug.Log($"Temp Tuple: {_processor.GetColorLetter(tempTuple.Item1)}, {_processor.GetColorLetter(tempTuple.Item2)}, {tempTuple.Item3}");
+                        // Debug.Log($"Temp Tuple: {_processor.GetColorLetter(tempTuple.Item1)}, {_processor.GetColorLetter(tempTuple.Item2)}, {tempTuple.Item3}");
                         
                         // get all the tuples in the list of possible pairs
                         foreach (Tuple<Color,Color,string> dataTuple in _processor.GetTilePairs())
@@ -224,7 +224,7 @@ public class WaveFunction
                         
                         if (!foundPair)
                         {
-                            Debug.Log("Set to False: " + _processor.GetColorLetter(otherColor));
+                            // Debug.Log("Set to False: " + _processor.GetColorLetter(otherColor));
                             
                             neighborTile.UpdateSuperposition(otherColor, false);
                             // stack.Push(neighborTile); // this might add multiple times?
