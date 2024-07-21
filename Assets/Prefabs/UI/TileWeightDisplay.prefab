@@ -286,3 +286,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tile: {fileID: 9081616198642981299}
   weightText: {fileID: 5703440526089733988}
+  letterText: {fileID: 5906344906848164890}

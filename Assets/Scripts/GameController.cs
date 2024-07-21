@@ -107,7 +107,6 @@ public class GameController : MonoBehaviour
         ProcessInput();
 
         DrawTileWeightPanels();
-
     }
     
     void Update()
@@ -180,17 +179,23 @@ public class GameController : MonoBehaviour
      */
     private void DrawTileWeightPanels()
     {
-        // show the weights as a fraction on the screen
-        int index = 0;
-        foreach (KeyValuePair<Color, string> kvp in _processor.GetTileWeightsDisplay())
-        {
-            // Debug.Log("Color: " + kvp.Key + ", Display: " + kvp.Value);
+        int totalPixels = _processor.GetTotalPixels();
+        Dictionary<Color, char> colorLetterMap = _processor.GetColorLetterMap();
+        Dictionary<char, int> letterCounts = _processor.GetLetterCounts();
 
+        int index = 0;
+        foreach (KeyValuePair<Color, char> kvp in colorLetterMap)
+        {
             Vector3 position = new Vector3(0f, index * tileWeightDisplayPrefab.GetComponent<RectTransform>().rect.height, 0f);
             
-            // I could look into the better UI manager thingy later on.. but that is not the point right now
+            // calculate panel values
+            Color color = kvp.Key;
+            string ratioText = letterCounts[kvp.Value] + "/" + totalPixels;
+            char letter = kvp.Value;
+            
+            // create and assign values
             GameObject tileWeightDisplay = Instantiate(tileWeightDisplayPrefab, position, Quaternion.identity);
-            tileWeightDisplay.GetComponent<TileWeightDisplay>().SetColorAndText(kvp.Key, kvp.Value);
+            tileWeightDisplay.GetComponent<TileWeightDisplay>().DisplayData(color, ratioText, letter);
             
             tileWeightDisplay.transform.SetParent(tileWeightParent);
 

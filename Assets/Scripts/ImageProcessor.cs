@@ -23,6 +23,9 @@ public class ImageProcessor
 	private Dictionary<Color, float> _colorWeights;
 	private Dictionary<Color, string> _colorWeightsDisplay;
 
+	// idk if char was the best type for the letter
+	private int _totalPixels;
+	
 	private Dictionary<Color, char> _colorLetterMap;
 	private Dictionary<char, int> _letterCounts;
 	private char[] _letters; // the letter representation of the input image colour array
@@ -56,11 +59,12 @@ public class ImageProcessor
 		
 		// idk it matters, but this array stores the pixel indexes starting from the bottom left of the input image 
 		Color[] colors = _original.GetPixels();
-		int totalPixels = colors.Length;
+		
+		_totalPixels = colors.Length;
 		
 		_colorLetterMap = new Dictionary<Color, char>();
 		_letterCounts = new Dictionary<char, int>();
-		_letters = new char[totalPixels];
+		_letters = new char[_totalPixels];
 		
 		char currentLetter = 'A';
 		int index = 0;
@@ -74,13 +78,13 @@ public class ImageProcessor
 				break;
 			} 
 			
-			// create letter map
+			// create color-letter map
 			if (_colorLetterMap.TryAdd(color, currentLetter))
 			{
 				currentLetter++;
 			}
 			
-			// 
+			// count the number of occs of each letter
 			if (_colorLetterMap.TryGetValue(color, out char letter))
 			{
 				if (!_letterCounts.TryAdd(letter, 1))
@@ -88,22 +92,15 @@ public class ImageProcessor
 					_letterCounts[letter] += 1;
 				}
 			}
-
+			
+			// translate the color[] into char[]
 			_letters[index] = _colorLetterMap[color];
 
 			index += 1;
 		}
 		
-		CustomUtils.DebugArray(_colorLetterMap.Keys.ToArray());
-		CustomUtils.DebugArray(_colorLetterMap.Values.ToArray());
 		
-		CustomUtils.DebugArray(_letterCounts.Keys.ToArray());
-		CustomUtils.DebugArray(_letterCounts.Values.ToArray());
-		
-		CustomUtils.DebugArray(_letters);
-		
-		
-		
+		///// COLOR IMPLEMENTATION! KEEPING HERE WHILE REFACTORING ABOVE
 		_colorCounts = new Dictionary<Color, int>();
 		
 		// count each colour
@@ -121,8 +118,8 @@ public class ImageProcessor
 		
 		foreach (KeyValuePair<Color, int> kvp in _colorCounts)
 		{
-			_colorWeights.Add(kvp.Key, (float) kvp.Value / totalPixels);
-			_colorWeightsDisplay.Add(kvp.Key, kvp.Value + "/" + totalPixels);
+			_colorWeights.Add(kvp.Key, (float) kvp.Value / _totalPixels);
+			_colorWeightsDisplay.Add(kvp.Key, kvp.Value + "/" + _totalPixels);
 		}
 		
 		// calculate all the pairs between the tiles and the direction
@@ -160,6 +157,7 @@ public class ImageProcessor
         int height = _original.height;
 
         // Define the directions: up, down, left, right
+        // will make this part of custom utils so I can reference
         Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
         for (int y = 0; y < height; y++)
@@ -262,7 +260,23 @@ public class ImageProcessor
 		    _allowedNeighbors.Add(color, neighbors);
 	    }
     }
-	
+    
+    public int GetTotalPixels()
+    {
+	    return _totalPixels;
+    }
+
+    public Dictionary<Color, char> GetColorLetterMap()
+    {
+	    return _colorLetterMap;
+    }
+
+    public Dictionary<char, int> GetLetterCounts()
+    {
+	    return _letterCounts;
+    }
+    
+    ///// COLOR IMPLEMENTATION! KEEPING HERE WHILE REFACTORING ABOVE
 	public Dictionary<Color, int> GetTileCount()
 	{
 		return _colorCounts;
