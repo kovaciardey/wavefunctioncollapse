@@ -267,6 +267,8 @@ public class GameController : MonoBehaviour
     }
     
     // "Model"
+    // I don't need to pass the colours (or the letters) here, because I am sending the processor variable
+    // and I can retrieve the things from there in the wfc class
     private void GenerateWithDelay(Color[] colors)
     {
         _wf = new WaveFunction(width, colors, _processor, floatComparisonTolerance);
@@ -275,6 +277,9 @@ public class GameController : MonoBehaviour
     }
     
     // "Model"
+    // Need to update this to simply generate in the background, then just output the final result 
+    // basically disable the animation for now 
+    // basically get rid of the coroutine
     private IEnumerator GetAnimateWfc()
     {
         // collapse first
