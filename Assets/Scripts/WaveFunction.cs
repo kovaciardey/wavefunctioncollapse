@@ -208,7 +208,7 @@ public class WaveFunction
                         
                         // Debug.Log("TILE: " + tileColor);
                         
-                        Tuple<Color, Color, string> tempTuple = new Tuple<Color, Color, string>(tileColor, otherColor, _processor.GetDirectionName(direction));
+                        Tuple<Color, Color, string> tempTuple = new Tuple<Color, Color, string>(tileColor, otherColor, CustomUtils.GetDirectionString(direction));
                         // Debug.Log($"Temp Tuple: {_processor.GetColorLetter(tempTuple.Item1)}, {_processor.GetColorLetter(tempTuple.Item2)}, {tempTuple.Item3}");
                         
                         // get all the tuples in the list of possible pairs

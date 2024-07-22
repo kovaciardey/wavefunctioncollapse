@@ -22,7 +22,17 @@ public class ImageProcessor
 	private Dictionary<Color, int> _colorCounts;
 	private Dictionary<Color, float> _colorWeights;
 	private Dictionary<Color, string> _colorWeightsDisplay;
+	
+	// The tuple contains items as follows:
+	// neighbour, current, direction
+	// e.g:
+	//	(SEA, COAST, LEFT): SEA tile can be placed to the LEFT of a COAST tile
+	//	(COAST, SEA, RIGHT): COAST tile can be placed to the RIGHT of a SEA tile
+	private List<Tuple<Color, Color, string>> _uniquePairs = new List<Tuple<Color, Color, string>>();
+	private Dictionary<Color, Dictionary<string, List<Color>>> _allowedNeighbors;
 
+	
+	
 	// idk if char was the best type for the letter
 	private int _totalPixels;
 	private char[] _letters; // the letter representation of the input image colour array
@@ -31,14 +41,7 @@ public class ImageProcessor
 	private Dictionary<char, int> _letterCounts;
 	private Dictionary<char, float> _letterWeights;
 
-	// The tuple contains items as follows:
-	// neighbour, current, direction
-	// e.g:
-	//	(SEA, COAST, LEFT): SEA tile can be placed to the LEFT of a COAST tile
-	//	(COAST, SEA, RIGHT): COAST tile can be placed to the RIGHT of a SEA tile
-	private List<Tuple<Color, Color, string>> _uniquePairs = new List<Tuple<Color, Color, string>>();
-
-	private Dictionary<Color, Dictionary<string, List<Color>>> _allowedNeighbors;
+	private HashSet<Tuple<char, char, string>> _letterPairs;
 	
 	public ImageProcessor(Texture2D texture)
 	{
@@ -60,44 +63,16 @@ public class ImageProcessor
 		AssetDatabase.ImportAsset(_assetPath);
 		
 		InitialProcessing();
-
-		CalculateWeights();
-		
-		///// COLOR IMPLEMENTATION! KEEPING HERE WHILE REFACTORING ABOVE
-		_colorCounts = new Dictionary<Color, int>();
-		
-		// idk if it matters, but this array seems to store the pixel indexes starting from the bottom left of the input image 
-		Color[] colors = _original.GetPixels();
-		
-		// count each colour
-		foreach (Color color in colors)
-		{
-			if (!_colorCounts.TryAdd(color, 1))
-			{
-				_colorCounts[color] += 1;
-			}
-		}
-		
-		// calculate the weights of each tile
-		_colorWeights = new Dictionary<Color, float>();
-		_colorWeightsDisplay = new Dictionary<Color, string>();
-		
-		foreach (KeyValuePair<Color, int> kvp in _colorCounts)
-		{
-			_colorWeights.Add(kvp.Key, (float) kvp.Value / _totalPixels);
-			_colorWeightsDisplay.Add(kvp.Key, kvp.Value + "/" + _totalPixels);
-		}
-		
-		// calculate all the pairs between the tiles and the direction
-		// aka the 3-tuples
-
-		CalculateColors();
-		
-		FindOrthogonalPixelPairs();
-
-		CalculateAllowedNeighbors();
 		
 		_importer.isReadable = false;
+		
+		CalculateWeights();
+
+		CalculateOrthogonalPairs();
+		
+		// CalculateAllowedNeighbors();
+		
+		Debug.Log("Input Processing Finished");
 	}
 
 	/**
@@ -166,103 +141,43 @@ public class ImageProcessor
 		}
 	}
 	
-	// creates a Color array from all the possible keys in the "counts" array
-	// for now is an array.. will see if I need to make list or not
-	
-	// pretty certain this is useless. I can just return _letterCount.Keys.ToArray if I need a list of the unique letters
-	private void CalculateColors()
+	/**
+	 * Calculates the set of 3-tuples for the input image
+	 */
+	private void CalculateOrthogonalPairs()
 	{
-		_uniqueColors = new Color[_colorCounts.Count];
+		int width = _original.width;
+		int height = _original.height;
 
-		int i = 0;
-		foreach (KeyValuePair<Color,int> kvp in _colorCounts)
+		_letterPairs = new HashSet<Tuple<char, char, string>>();
+		
+		// iterates through the "image" starting from the bottom-left corner
+		for (int y = 0; y < height; y++)
 		{
-			_uniqueColors[i] = kvp.Key;
+			for (int x = 0; x < width; x++)
+			{
+				char letter = _letters[CustomUtils.GetArrayIndexFromCoords(x, y, width)];
 
-			i++;
+				foreach (Vector2Int direction in CustomUtils.Directions)
+				{
+					int neighborX = x + direction.x;
+					int neighborY = y + direction.y;
+
+					if (!CustomUtils.IsWithinBounds(neighborX, neighborY, width, height))
+					{
+						continue;
+					}
+					
+					char neighborLetter =  _letters[CustomUtils.GetArrayIndexFromCoords(neighborX, neighborY, width)];
+					string directionName = CustomUtils.GetDirectionString(direction);
+
+					Tuple<char, char, string> letterPair = new Tuple<char, char, string>(letter, neighborLetter, directionName);
+
+					_letterPairs.Add(letterPair);
+				}
+			}
 		}
 	}
-	
-	private void FindOrthogonalPixelPairs()
-    {
-	    // I could improve this so I don't get the pixels again
-        Color[] pixels = _original.GetPixels();
-        int width = _original.width;
-        int height = _original.height;
-
-        // Define the directions: up, down, left, right
-        // will make this part of custom utils so I can reference
-        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-	    
-        // need to figure out how this goes through the array
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-	            // use custom utils function
-	            // char
-                Color originalPixel = pixels[y * width + x];
-
-                foreach (Vector2Int direction in directions)
-                {
-                    int neighborX = x + direction.x;
-                    int neighborY = y + direction.y;
-
-                    // Check if the neighbor is within bounds
-                    if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height)
-                    {
-	                    // use custom utils function
-	                    // char
-                        Color neighborPixel = pixels[neighborY * width + neighborX];
-                        string pairDirection = GetDirectionName(direction); // this might be bad that it uses strings like that.. rethink a bit
-                        
-                        // change tuple to char char string
-                        Tuple<Color, Color, string> pair = new Tuple<Color, Color, string>(neighborPixel, originalPixel, pairDirection);
-                        
-                        // Check if the pair is unique before adding it to the list
-                        // this bit is interesting.. how could i improve so I don't have to iterate through the pair array each time a new pair is found?
-                        if (!PairExists(pair))
-                        {
-	                        _uniquePairs.Add(pair);
-                        }
-                    }
-                }
-            }
-        }
-        
-        // // HARDCODED: I need to manually add green as the bottom allowed neighbor for green as there is no neighbor
-        // // the bitmap didn't contain enough info
-        // _uniquePairs.Add(new Tuple<Color, Color, string>(new Color(0.071f, 0.576f, 0.192f), new Color(0.071f, 0.576f, 0.192f), "Up"));
-        // _uniquePairs.Add(new Tuple<Color, Color, string>(new Color(0.071f, 0.576f, 0.192f), new Color(0.071f, 0.576f, 0.192f), "Down"));
-    }
-	
-	// how to better check the pair is unique rather than doing this
-	// HashSet?
-    private bool PairExists(Tuple<Color, Color, string> pair)
-    {
-        foreach (Tuple<Color, Color, string> existingPair in _uniquePairs)
-        {
-            if (existingPair.Item1 == pair.Item1 && existingPair.Item2 == pair.Item2 && existingPair.Item3 == pair.Item3)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-	
-    // need to figure out what's the deal with this
-    public string GetDirectionName(Vector2Int direction)
-    {
-        if (direction == Vector2Int.up)
-            return "Up";
-        if (direction == Vector2Int.down)
-            return "Down";
-        if (direction == Vector2Int.left)
-            return "Left";
-        if (direction == Vector2Int.right)
-            return "Right";
-        return "Unknown";
-    }
 	
     // create a dictionary
     // Color, Dictionary<string, List<Color>>
