@@ -42,6 +42,7 @@ public class ImageProcessor
 	private Dictionary<char, float> _letterWeights;
 
 	private HashSet<Tuple<char, char, string>> _letterPairs;
+	private Dictionary<char, Dictionary<string, List<char>>> _letterNeighbors;
 	
 	public ImageProcessor(Texture2D texture)
 	{
@@ -70,7 +71,7 @@ public class ImageProcessor
 
 		CalculateOrthogonalPairs();
 		
-		// CalculateAllowedNeighbors();
+		CalculateAllowedNeighbors();
 		
 		Debug.Log("Input Processing Finished");
 	}
@@ -179,48 +180,38 @@ public class ImageProcessor
 		}
 	}
 	
-    // create a dictionary
-    // Color, Dictionary<string, List<Color>>
-    // this is just another way of representing the neighbours as
-    // as a KVP Colour => ["direction" => [Colour]]
-    // rather than relying on the lit of pairs
-    private void CalculateAllowedNeighbors()
-    {
-	    // i might start using more hashsets around here if I need to ensure uniqueness
-	    _allowedNeighbors = new Dictionary<Color, Dictionary<string, List<Color>>>();
+	/**
+	 * An alternative way of displaying the possible neighbors for a tile
+	 * By using a list of tiles for each direction instead of the list of 3-tuples
+	 *
+	 * Not currently used but thought I would add for the future
+	 * Might be useful at some point to have the neighbors represented like this
+	 */
+	private void CalculateAllowedNeighbors()
+	{
+		_letterNeighbors = new Dictionary<char, Dictionary<string, List<char>>>();
 
-	    foreach (Color color in _uniqueColors)
-	    {
-		    // Debug.Log("COLOR: " + color);
-		    
-		    Dictionary<string, List<Color>> neighbors = new Dictionary<string, List<Color>>();
-
-		    foreach (Tuple<Color,Color,string> pair in GetTilePairs())
-		    {
-			    if (pair.Item2 == color)
-			    {
-				    // Debug.Log("Unique Pair Added: " + pair.Item1 + ", " + pair.Item2 + ", " + pair.Item3);
-				    
-				    // if the direction already exists, it mean that the list has already been initialised
-				    // then simple add item 1 to the list.. In theory tho, I don't think there will be any pixels
-				    // with more than 1 element per direction
-				    
-				    // This feels kinda iffy tbh, but it does make sense (may need to rewrite without the TryAdd function) 
-					if (!neighbors.TryAdd(pair.Item3, new List<Color>()))
-					{
-						neighbors[pair.Item3].Add(pair.Item1);
-					}
-					else
-					{
-						neighbors[pair.Item3].Add(pair.Item1);
-					}
-			    }
-		    }
-		    
-		    // this should not have any duplicates, as the dictionaries were built in advance
-		    _allowedNeighbors.Add(color, neighbors);
-	    }
-    }
+		// initialise the dictionary:
+		// add each letter, and for each letter create the direction dict with an empty list
+		foreach (char letter in GetUniqueLetters())
+		{
+			Dictionary<string, List<char>> directionNeighbors = new Dictionary<string, List<char>>();
+			
+			foreach (Vector2Int direction in CustomUtils.Directions)
+			{
+				directionNeighbors.Add(CustomUtils.GetDirectionString(direction), new List<char>());
+			}
+			
+			_letterNeighbors.Add(letter, directionNeighbors);
+		}
+		
+		// iterate through the pairs array 
+		// update the lists
+		foreach (Tuple<char,char,string> pair in _letterPairs)
+		{
+			_letterNeighbors[pair.Item1][pair.Item3].Add(pair.Item2);
+		}
+	}
     
     public int GetTotalPixels()
     {
@@ -235,6 +226,11 @@ public class ImageProcessor
     public Dictionary<char, int> GetLetterCounts()
     {
 	    return _letterCounts;
+    }
+
+    public char[] GetUniqueLetters()
+    {
+	    return _letterCounts.Keys.ToArray();
     }
     
     ///// COLOR IMPLEMENTATION! KEEPING HERE WHILE REFACTORING ABOVE

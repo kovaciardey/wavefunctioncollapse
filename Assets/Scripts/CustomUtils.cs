@@ -79,4 +79,29 @@ public static class CustomUtils
     {
         Debug.Log($"Temp Tuple: {tuple.Item1}, {tuple.Item2}, {tuple.Item3}");
     }
+    
+    /**
+     * Debug.log a separator
+     */
+    public static void DebugSeparator()
+    {
+        Debug.Log("================");
+    }
+
+    /**
+     * Debug the "letter" => ["direction" => ["letter"]] array
+     */
+    public static void DebugLetterNeighborsDictionary(Dictionary<char, Dictionary<string, List<char>>> letterNeighbors)
+    {
+        foreach (KeyValuePair<char,Dictionary<string,List<char>>> letterNeighbor in letterNeighbors)
+        {
+            foreach (KeyValuePair<string, List<char>> direction in letterNeighbor.Value)
+            {
+                Debug.Log(letterNeighbor.Key + " - " + direction.Key);
+                DebugArray(direction.Value);
+            }
+			
+            DebugSeparator();
+        }
+    }
 }

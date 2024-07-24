@@ -14,6 +14,9 @@ public class WaveFunction
 	private ImageProcessor _processor;
 	private float _floatComparisonTolerance;
 	
+	// I could do something with a stack maybe? and just pop an item out whenever a tile is selected
+	// (might need a list with actual removal of elements)
+	
 	// weights 
 
 	public WaveFunction(int width, Color[] colors, ImageProcessor processor, float tolerance)
@@ -212,6 +215,8 @@ public class WaveFunction
                         // Debug.Log($"Temp Tuple: {_processor.GetColorLetter(tempTuple.Item1)}, {_processor.GetColorLetter(tempTuple.Item2)}, {tempTuple.Item3}");
                         
                         // get all the tuples in the list of possible pairs
+                        
+                        // TODO: use the hashset to check, cos jeez.. 
                         foreach (Tuple<Color,Color,string> dataTuple in _processor.GetTilePairs())
                         {
                             if (CompareTuple(dataTuple, tempTuple))
