@@ -18,7 +18,7 @@ public class ImageProcessor
 	private readonly string _assetPath;
 
 	private Color[] _uniqueColors;
-
+	
 	private Dictionary<Color, int> _colorCounts;
 	private Dictionary<Color, float> _colorWeights;
 	private Dictionary<Color, string> _colorWeightsDisplay;
@@ -41,6 +41,11 @@ public class ImageProcessor
 	private Dictionary<char, int> _letterCounts;
 	private Dictionary<char, float> _letterWeights;
 
+	// The tuple contains items as follows:
+	// neighbour, current, direction
+	// e.g:
+	//	(SEA, COAST, LEFT): SEA tile can be placed to the LEFT of a COAST tile
+	//	(COAST, SEA, RIGHT): COAST tile can be placed to the RIGHT of a SEA tile
 	private HashSet<Tuple<char, char, string>> _letterPairs;
 	private Dictionary<char, Dictionary<string, List<char>>> _letterNeighbors;
 	
