@@ -9,27 +9,40 @@ public class WaveFunction
 	private MapTile[] _grid;
 
 	private int _width;
-	private Color[] _colors; // the set of all the possible tiles
-
+	
 	private ImageProcessor _processor;
-	private float _floatComparisonTolerance;
 	
 	// I could do something with a stack maybe? and just pop an item out whenever a tile is selected
 	// (might need a list with actual removal of elements)
 	
-	// weights 
-
-	public WaveFunction(int width, Color[] colors, ImageProcessor processor, float tolerance)
+ 	public WaveFunction(int width, ImageProcessor processor)
 	{
 		_width = width;
-		_colors = colors;
 		_processor = processor;
-		_floatComparisonTolerance = tolerance;
 		
 		InitialiseGrid();
 	}
+    
+	/**
+	 * Initialise the _grid new instances of MapTile for each coord
+	 */
+	private void InitialiseGrid()
+	{
+		// initialise the output map
+		_grid = new MapTile[_width * _width];
+		for (int y = 0; y < _width; y += 1)
+		{
+			for (int x = 0; x < _width; x += 1)
+			{
+				Vector2Int coords = new Vector2Int(x, y);
+				
+				_grid[CustomUtils.GetArrayIndexFromCoords(coords, _width)] = new MapTile(coords, _processor.GetUniqueLetters());
+			}
+		}
+	}
 	
 	// returns true if the grid has nod been filled yet
+	// this for sure can be done in a better way than this.. but for now will leave like this
 	public bool HasUncollapsed()
 	{
 		foreach (MapTile tile in _grid) 
@@ -51,6 +64,7 @@ public class WaveFunction
 	// }
 	
 	// WFC
+	// can remove the weights.. can take from processor
 	private float CalculateShannonEntropy(MapTile tile, Dictionary<Color, float> weights)
 	{
 		float sumOfWeights = 0;
@@ -70,6 +84,7 @@ public class WaveFunction
 	}
     
 	// WFC
+	// map color to using the processor array
 	public Color[] GetColorMap()
 	{
 		Color[] outputColorMap = new Color[_width * _width];
@@ -82,12 +97,21 @@ public class WaveFunction
 	}
     
 	// WFC
+	// remove.. use function from custom utils
 	private int GetArrayIndexFromCoords(Vector2Int coords)
 	{
 		return coords.x * _width + coords.y;
 	}
 	
 	 // WFC
+	 // in the python example they when finding the lowest entropy, the evaluate the ent < min_ent
+	 // then just save the coords.. basically finding the first tile with the lowest entropy
+	 
+	 // what mine is doing is to finds the lowest entropy value, then all the tiles with that lowest entropy
+	 // then randomly one tile of all of those with the lowest entropy
+	 
+	 // i'm still curious to see what difference, if any is between the 2 implementations
+	 // 
     public MapTile GetRandomUncollapsedWithTheLowestEntropy()
     {
         float lowestEntropy = Mathf.Infinity;
@@ -98,6 +122,8 @@ public class WaveFunction
             if (mapTile.IsCollapsed) { continue; }
             
             float tileEntropy = CalculateShannonEntropy(mapTile, _processor.GetTileWeights());
+            
+            // apply the noise here
 
             if (tileEntropy < lowestEntropy)
             {
@@ -112,9 +138,7 @@ public class WaveFunction
         {
             if (mapTile.IsCollapsed) { continue; }
             
-            // need to have a look at adding the noise here
-            
-            if (Math.Abs(CalculateShannonEntropy(mapTile, _processor.GetTileWeights()) - lowestEntropy) < _floatComparisonTolerance)
+            if (Math.Abs(CalculateShannonEntropy(mapTile, _processor.GetTileWeights()) - lowestEntropy) < CustomUtils.FloatComparisonTolerance)
             {
                 lowestEntropyList.Add(mapTile);
             }
@@ -124,13 +148,15 @@ public class WaveFunction
         {
             return null;
         }
-
+        
+        // fix these names
         MapTile randomSelectedTileVersionOne = lowestEntropyList[Random.Range(0, lowestEntropyList.Count)];
 
         return randomSelectedTileVersionOne;
     }
     
     // WFC
+    // we'll reserve a day specifically for this one
     public void CollapseAtCoords(Vector2Int coords)
     {
         MapTile tile = _grid[GetArrayIndexFromCoords(coords)];
@@ -253,26 +279,9 @@ public class WaveFunction
 	}
 	
 	/**
-	 * Initialise the _grid new instances of MapTile for each coord
-	 */
-	private void InitialiseGrid()
-	{
-		// initialise the output map
-		_grid = new MapTile[_width * _width];
-		for (int j = 0; j < _width; j += 1)
-		{
-			for (int i = 0; i < _width; i += 1)
-			{
-				Vector2Int coords = new Vector2Int(i, j);
-				
-				_grid[CustomUtils.GetArrayIndexFromCoords(coords, _width)] = new MapTile(coords, _colors);
-			}
-		}
-	}
-	
-	/**
 	 * Checks if a set of coords in within the bounds of the grid
 	 */
+	// use the custom utils
 	private bool InGrid(Vector2Int coords)
 	{
 		// need to put height here when making n * m shape

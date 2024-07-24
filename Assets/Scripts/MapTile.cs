@@ -4,25 +4,39 @@ using UnityEngine;
 
 public class MapTile
 {
-	private Vector2Int _coords;
+	private readonly Vector2Int _coords;
 
-	public bool IsCollapsed { get; set; }
+	public bool IsCollapsed { get; set; } // will make private
 
 	// contains a list of all the possible types and a boolean if the type is possible or not
 	public Dictionary<Color, bool> TileSuperpositions { get; set; }
 
-	public MapTile(Vector2Int coords, Color[] possibleColors)
+	private Dictionary<char, bool> _letterSuperpositions;
+
+	public MapTile(Vector2Int coords, char[] letters)
 	{
 		_coords = coords;
 		
 		IsCollapsed = false;
-		
-		TileSuperpositions = new Dictionary<Color, bool>();
-		foreach (Color color in possibleColors)
+
+		_letterSuperpositions = new Dictionary<char, bool>();
+		foreach (char letter in letters)
 		{
 			// initialize all possible positions to true
-			TileSuperpositions.Add(color, true);
+			_letterSuperpositions.Add(letter, true);
 		}
+	}
+
+	public override string ToString()
+	{
+		string letterSuperpos = "";
+
+		foreach (KeyValuePair<char,bool> letter in _letterSuperpositions)
+		{
+			letterSuperpos += letter.Key + " " + letter.Value + "; ";
+		}
+		
+		return _coords + " " + letterSuperpos;
 	}
 	
 	// collapse tile based on the weights
@@ -182,4 +196,7 @@ public class MapTile
 	{
 		TileSuperpositions[color] = value;
 	}
+	
+	// might be worth adding a ToString method.
+		// show superposition. 
 }

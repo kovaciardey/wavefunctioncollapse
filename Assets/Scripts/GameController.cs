@@ -5,15 +5,15 @@ using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
+    [Header("Generation Settings")]
     public Texture2D input;
-
+    
     // will work with square output for now and I'll make it rectangle later
     public int width = 5;
 
-    public float floatComparisonTolerance = 0.00005f;
-    
     [Header("Display")]
     public Image inputDisplay;
+
     public RawImage outputDisplay;
     public Transform tileWeightParent;
     public GameObject tileWeightDisplayPrefab;
@@ -25,8 +25,6 @@ public class GameController : MonoBehaviour
     // [Header("Simulation Settings")] 
     
     private ImageProcessor _processor;
-
-    private WaveFunction _wf;
     
     void Start()
     {
@@ -43,32 +41,16 @@ public class GameController : MonoBehaviour
     public void Generate()
     {
         Debug.Log("Started Generation");
-        
-        // initialise _wfc
+
+        WaveFunction wf = new WaveFunction(width, _processor);
         
         // while has uncollapsed
         
-        // wfc.iterate
+            // wfc.iterate
         
-        // _wf = new WaveFunction(width, _processor.GetUniqueTiles(), _processor, floatComparisonTolerance);
-        //
-        // // collapse first
-        // _wf.CollapseAtCoords(_wf.GetRandomUncollapsedWithTheLowestEntropy().GetCoords());
-        //
-        // // do wfc
-        // while (_wf.HasUncollapsed())
-        // {
-        //     MapTile randomTile = _wf.GetRandomUncollapsedWithTheLowestEntropy();
-        //     
-        //     if (randomTile == null)
-        //     {
-        //         break;
-        //     }
-        //     
-        //     _wf.CollapseAtCoords(randomTile.GetCoords());
-        // }
-        //
-        // DrawTexture(_wf.GetColorMap());
+        // DrawTexture(wf.GetColorMap());
+        
+        Debug.Log("End Generation");
     }
 
     /**

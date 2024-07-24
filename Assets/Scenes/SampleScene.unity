@@ -440,17 +440,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   input: {fileID: 2800000, guid: be15876203101da47ad273506c98cf10, type: 3}
-  width: 50
-  floatComparisonTolerance: 0.00005
+  width: 5
   inputDisplay: {fileID: 134526413}
   outputDisplay: {fileID: 1737845382}
   tileWeightParent: {fileID: 378442277}
   tileWeightDisplayPrefab: {fileID: 9107379435959950293, guid: 9a53e59e1d3165848b980ceb3a5e7373, type: 3}
-  buttonText: {fileID: 2018046290}
-  startTextValue: Start
-  resetTextValue: Reset
   inputDisplayWidth: 200
-  slowdownFactor: 300
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -924,7 +919,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Start
+  m_Text: Generate
 --- !u!222 &2018046291
 CanvasRenderer:
   m_ObjectHideFlags: 0

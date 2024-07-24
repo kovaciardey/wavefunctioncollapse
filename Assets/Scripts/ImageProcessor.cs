@@ -6,10 +6,9 @@ using UnityEditor;
 using UnityEngine;
 
 /**
- * Splits the image, returns the different types of colours and the pairs between each
- * Calculates the weights of each image
+ * Processes the input image and calculates all the required elements.
  *
- * TODO: need to try a round of refactoring after I get a first version done
+ * Represents each colour as a letter
  */
 public class ImageProcessor
 {
