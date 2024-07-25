@@ -15,20 +15,10 @@ public class ImageProcessor
 	private readonly Texture2D _original;
 	private readonly TextureImporter _importer;
 	private readonly string _assetPath;
-
-	private Color[] _uniqueColors;
 	
-	private Dictionary<Color, int> _colorCounts;
+	// temp
 	private Dictionary<Color, float> _colorWeights;
-	private Dictionary<Color, string> _colorWeightsDisplay;
-	
-	// The tuple contains items as follows:
-	// neighbour, current, direction
-	// e.g:
-	//	(SEA, COAST, LEFT): SEA tile can be placed to the LEFT of a COAST tile
-	//	(COAST, SEA, RIGHT): COAST tile can be placed to the RIGHT of a SEA tile
 	private List<Tuple<Color, Color, string>> _uniquePairs = new List<Tuple<Color, Color, string>>();
-	private Dictionary<Color, Dictionary<string, List<Color>>> _allowedNeighbors;
 
 	
 	
@@ -209,8 +199,6 @@ public class ImageProcessor
 			_letterNeighbors.Add(letter, directionNeighbors);
 		}
 		
-		// iterate through the pairs array 
-		// update the lists
 		foreach (Tuple<char,char,string> pair in _letterPairs)
 		{
 			_letterNeighbors[pair.Item1][pair.Item3].Add(pair.Item2);
@@ -236,37 +224,28 @@ public class ImageProcessor
     {
 	    return _letterCounts.Keys.ToArray();
     }
+
+    public Dictionary<char, float> GetLetterWeights()
+    {
+	    return _letterWeights;
+    }
+
+    public HashSet<Tuple<char, char, string>> GetPairsList()
+    {
+	    return _letterPairs;
+    }
     
     ///// COLOR IMPLEMENTATION! KEEPING HERE WHILE REFACTORING ABOVE
     ///
     /// probably most of these functions will disappear
-	public Dictionary<Color, int> GetTileCount()
-	{
-		return _colorCounts;
-	}
 	
 	public Dictionary<Color, float> GetTileWeights()
 	{
 		return _colorWeights;
 	}
-	
-	public Dictionary<Color, string> GetTileWeightsDisplay()
-	{
-		return _colorWeightsDisplay;
-	}
-
+    
 	public List<Tuple<Color, Color, string>> GetTilePairs()
 	{
 		return _uniquePairs;
-	}
-
-	public Color[] GetUniqueTiles()
-	{
-		return _uniqueColors;
-	}
-
-	public Dictionary<Color, Dictionary<string, List<Color>>> GetAllowedNeighbors()
-	{
-		return _allowedNeighbors;
 	}
 }

@@ -8,9 +8,8 @@ public class WaveFunction
 {
 	private MapTile[] _grid;
 
-	private int _width;
-	
-	private ImageProcessor _processor;
+	private readonly int _width;
+	private readonly ImageProcessor _processor;
 	
 	// I could do something with a stack maybe? and just pop an item out whenever a tile is selected
 	// (might need a list with actual removal of elements)
@@ -41,8 +40,9 @@ public class WaveFunction
 		}
 	}
 	
-	// returns true if the grid has nod been filled yet
-	// this for sure can be done in a better way than this.. but for now will leave like this
+	/**
+	 * Checks if there are any uncollapsed tiles left in the grid
+	 */
 	public bool HasUncollapsed()
 	{
 		foreach (MapTile tile in _grid) 
@@ -56,21 +56,116 @@ public class WaveFunction
         
 		return false;
 	}
+	
+	/**
+	 * Perform One Iteration of the generation
+	 */
+	public void Iterate()
+	{
+		// select tile to collapse
+		MapTile tile = GetMinimumEntropyTile();
+		
+		Debug.Log(tile);
+		
+		// collapse
+		
+		// propagate
+		
+		// collapse first
+		// CollapseAtCoords(GetRandomUncollapsedWithTheLowestEntropyOld().GetCoords());
+	}
+	
+	/**
+	 * Finds the tile with the lowest entropy
+	 */
+	private MapTile GetMinimumEntropyTile()
+	{
+		float minEntropy = Mathf.Infinity;
+		MapTile selectedTile = null;
 
-	// public void Iterate()
-	// {
-	// 	// collapse first
-	// 	CollapseAtCoords(GetRandomUncollapsedWithTheLowestEntropy().GetCoords());
-	// }
+		foreach (MapTile mapTile in _grid)
+		{
+			if (mapTile.IsCollapsed)
+			{
+				continue;
+			}
+
+			float entropy = CalculateShannonEntropy(mapTile, _processor.GetLetterWeights());
+			
+			// apply some noise
+			float entropyWithNoise = entropy - Random.Range(0.0f, 1.0f) / 1000;
+			
+			if (entropyWithNoise < minEntropy)
+			{
+				minEntropy = entropyWithNoise;
+				selectedTile = mapTile;
+			}
+		}
+
+		return selectedTile;
+	}
+	
+	// WFC
+	// in the python example they when finding the lowest entropy, the evaluate the ent < min_ent
+	// then just save the coords.. basically finding the first tile with the lowest entropy
+	 
+	// what mine is doing is to finds the lowest entropy value, then all the tiles with that lowest entropy
+	// then randomly one tile of all of those with the lowest entropy
+	 
+	// i'm still curious to see what difference, if any is between the 2 implementations
+	// 
+	public MapTile GetRandomUncollapsedWithTheLowestEntropyOld()
+	{
+		float lowestEntropy = Mathf.Infinity;
+        
+		// find the lowest entropy
+		foreach (MapTile mapTile in _grid)
+		{
+			if (mapTile.IsCollapsed) { continue; }
+            
+			float tileEntropy = CalculateShannonEntropy(mapTile, _processor.GetLetterWeights());
+            
+			// apply the noise here
+
+			if (tileEntropy < lowestEntropy)
+			{
+				lowestEntropy = tileEntropy;
+			}
+		}
+        
+		List<MapTile> lowestEntropyList = new List<MapTile>();
+    
+		// find all the tiles with the lowest entropy
+		foreach (MapTile mapTile in _grid)
+		{
+			if (mapTile.IsCollapsed) { continue; }
+            
+			// this tests equality between the 2 floats
+			if (Math.Abs(CalculateShannonEntropy(mapTile, _processor.GetLetterWeights()) - lowestEntropy) < CustomUtils.FloatComparisonTolerance)
+			{
+				lowestEntropyList.Add(mapTile);
+			}
+		}
+        
+		if (lowestEntropyList.Count == 0)
+		{
+			return null;
+		}
+        
+		// fix these names
+		MapTile randomSelectedTileVersionOne = lowestEntropyList[Random.Range(0, lowestEntropyList.Count)];
+
+		return randomSelectedTileVersionOne;
+	}
 	
 	// WFC
 	// can remove the weights.. can take from processor
-	private float CalculateShannonEntropy(MapTile tile, Dictionary<Color, float> weights)
+	private float CalculateShannonEntropy(MapTile tile, Dictionary<char, float> weights)
 	{
 		float sumOfWeights = 0;
 		float sumOfWeightLogWeights = 0;
 
-		foreach (KeyValuePair<Color,bool> pair in tile.TileSuperpositions)
+		foreach (KeyValuePair<char,bool> pair in tile.GetSuperpositions())
 		{
 			if (pair.Value)
 			{
@@ -82,80 +177,8 @@ public class WaveFunction
 
 		return (float) Math.Log(sumOfWeights) - (sumOfWeightLogWeights / sumOfWeights);
 	}
-    
-	// WFC
-	// map color to using the processor array
-	public Color[] GetColorMap()
-	{
-		Color[] outputColorMap = new Color[_width * _width];
-		foreach (MapTile tile in _grid)
-		{
-			outputColorMap[GetArrayIndexFromCoords(tile.GetCoords())] = tile.GetSelectedColor();
-		}
-
-		return outputColorMap;
-	}
-    
-	// WFC
-	// remove.. use function from custom utils
-	private int GetArrayIndexFromCoords(Vector2Int coords)
-	{
-		return coords.x * _width + coords.y;
-	}
 	
 	 // WFC
-	 // in the python example they when finding the lowest entropy, the evaluate the ent < min_ent
-	 // then just save the coords.. basically finding the first tile with the lowest entropy
-	 
-	 // what mine is doing is to finds the lowest entropy value, then all the tiles with that lowest entropy
-	 // then randomly one tile of all of those with the lowest entropy
-	 
-	 // i'm still curious to see what difference, if any is between the 2 implementations
-	 // 
-    public MapTile GetRandomUncollapsedWithTheLowestEntropy()
-    {
-        float lowestEntropy = Mathf.Infinity;
-        
-        // find the lowest entropy
-        foreach (MapTile mapTile in _grid)
-        {
-            if (mapTile.IsCollapsed) { continue; }
-            
-            float tileEntropy = CalculateShannonEntropy(mapTile, _processor.GetTileWeights());
-            
-            // apply the noise here
-
-            if (tileEntropy < lowestEntropy)
-            {
-                lowestEntropy = tileEntropy;
-            }
-        }
-        
-        List<MapTile> lowestEntropyList = new List<MapTile>();
-    
-        // find all the tiles with the lowest entropy
-        foreach (MapTile mapTile in _grid)
-        {
-            if (mapTile.IsCollapsed) { continue; }
-            
-            if (Math.Abs(CalculateShannonEntropy(mapTile, _processor.GetTileWeights()) - lowestEntropy) < CustomUtils.FloatComparisonTolerance)
-            {
-                lowestEntropyList.Add(mapTile);
-            }
-        }
-        
-        if (lowestEntropyList.Count == 0)
-        {
-            return null;
-        }
-        
-        // fix these names
-        MapTile randomSelectedTileVersionOne = lowestEntropyList[Random.Range(0, lowestEntropyList.Count)];
-
-        return randomSelectedTileVersionOne;
-    }
-    
-    // WFC
     // we'll reserve a day specifically for this one
     public void CollapseAtCoords(Vector2Int coords)
     {
@@ -272,6 +295,26 @@ public class WaveFunction
             // break; // just do the propagation only for the main tile
         }
     }
+    
+	// WFC
+	// map letter to color using the processor array
+	public Color[] GetColorMap()
+	{
+		Color[] outputColorMap = new Color[_width * _width];
+		foreach (MapTile tile in _grid)
+		{
+			outputColorMap[GetArrayIndexFromCoords(tile.GetCoords())] = tile.GetSelectedColor();
+		}
+
+		return outputColorMap;
+	}
+    
+	// WFC
+	// remove.. use function from custom utils
+	private int GetArrayIndexFromCoords(Vector2Int coords)
+	{
+		return coords.x * _width + coords.y;
+	}
     
 	public MapTile[] GetMap()
 	{

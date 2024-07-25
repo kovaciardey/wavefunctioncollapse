@@ -44,6 +44,8 @@ public class GameController : MonoBehaviour
 
         WaveFunction wf = new WaveFunction(width, _processor);
         
+        wf.Iterate();
+        
         // while has uncollapsed
         
             // wfc.iterate

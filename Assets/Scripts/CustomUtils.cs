@@ -15,7 +15,7 @@ public static class CustomUtils
     public static readonly Vector2Int[] Directions = { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
     
     // I think Rider was complaining when I was comparing some floats a bit below and I added this
-    public const float FloatComparisonTolerance = 0.00005f;
+    public const float FloatComparisonTolerance = 0.005f;
     
     /**
      * Returns a string representing the orthogonal direction

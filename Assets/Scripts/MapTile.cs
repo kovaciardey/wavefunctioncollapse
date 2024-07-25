@@ -27,6 +27,11 @@ public class MapTile
 		}
 	}
 
+	public Dictionary<char, bool> GetSuperpositions()
+	{
+		return _letterSuperpositions;
+	}
+
 	public override string ToString()
 	{
 		string letterSuperpos = "";
@@ -196,7 +201,4 @@ public class MapTile
 	{
 		TileSuperpositions[color] = value;
 	}
-	
-	// might be worth adding a ToString method.
-		// show superposition. 
 }
