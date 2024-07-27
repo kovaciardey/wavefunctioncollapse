@@ -16,11 +16,7 @@ public class ImageProcessor
 	private readonly TextureImporter _importer;
 	private readonly string _assetPath;
 	
-	// temp
-	private Dictionary<Color, float> _colorWeights;
 	private List<Tuple<Color, Color, string>> _uniquePairs = new List<Tuple<Color, Color, string>>();
-
-	
 	
 	// idk if char was the best type for the letter
 	private int _totalPixels;
@@ -238,11 +234,6 @@ public class ImageProcessor
     ///// COLOR IMPLEMENTATION! KEEPING HERE WHILE REFACTORING ABOVE
     ///
     /// probably most of these functions will disappear
-	
-	public Dictionary<Color, float> GetTileWeights()
-	{
-		return _colorWeights;
-	}
     
 	public List<Tuple<Color, Color, string>> GetTilePairs()
 	{

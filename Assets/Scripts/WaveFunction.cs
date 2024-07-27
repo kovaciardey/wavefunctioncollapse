@@ -48,7 +48,7 @@ public class WaveFunction
 		foreach (MapTile tile in _grid) 
 		{
 			// the first uncollapsed tile it encounters returns true
-			if (!tile.IsCollapsed)
+			if (!tile.IsCollapsed())
 			{
 				return true;
 			}
@@ -64,12 +64,13 @@ public class WaveFunction
 	{
 		// select tile to collapse
 		MapTile tile = GetMinimumEntropyTile();
-		
-		Debug.Log(tile);
+		// MapTile tile = GetRandomUncollapsedWithTheLowestEntropyOld(); // for experimental purposes once the the whole thing is refactored
 		
 		// collapse
+		tile.Collapse(_processor.GetLetterWeights()); 
 		
 		// propagate
+		
 		
 		// collapse first
 		// CollapseAtCoords(GetRandomUncollapsedWithTheLowestEntropyOld().GetCoords());
@@ -85,7 +86,7 @@ public class WaveFunction
 
 		foreach (MapTile mapTile in _grid)
 		{
-			if (mapTile.IsCollapsed)
+			if (mapTile.IsCollapsed())
 			{
 				continue;
 			}
@@ -105,15 +106,15 @@ public class WaveFunction
 		return selectedTile;
 	}
 	
-	// WFC
-	// in the python example they when finding the lowest entropy, the evaluate the ent < min_ent
-	// then just save the coords.. basically finding the first tile with the lowest entropy
-	 
-	// what mine is doing is to finds the lowest entropy value, then all the tiles with that lowest entropy
-	// then randomly one tile of all of those with the lowest entropy
-	 
-	// i'm still curious to see what difference, if any is between the 2 implementations
-	// 
+	/**
+	 * In the python example, when finding the lowest entropy, they evaluate the entr lt min_entr
+	 * then just save the coords.. basically finding the first tile with the lowest entropy
+	 *
+	 * What mine is doing is to find the lowest entropy value, then all the tiles with that lowest entropy
+	 * then randomly one tile of all of those with the lowest entropy
+	 *
+	 * I'm still curious to see what difference, if any is between the 2 implementations
+	 */
 	public MapTile GetRandomUncollapsedWithTheLowestEntropyOld()
 	{
 		float lowestEntropy = Mathf.Infinity;
@@ -121,7 +122,7 @@ public class WaveFunction
 		// find the lowest entropy
 		foreach (MapTile mapTile in _grid)
 		{
-			if (mapTile.IsCollapsed) { continue; }
+			if (mapTile.IsCollapsed()) { continue; }
             
 			float tileEntropy = CalculateShannonEntropy(mapTile, _processor.GetLetterWeights());
             
@@ -138,7 +139,7 @@ public class WaveFunction
 		// find all the tiles with the lowest entropy
 		foreach (MapTile mapTile in _grid)
 		{
-			if (mapTile.IsCollapsed) { continue; }
+			if (mapTile.IsCollapsed()) { continue; }
             
 			// this tests equality between the 2 floats
 			if (Math.Abs(CalculateShannonEntropy(mapTile, _processor.GetLetterWeights()) - lowestEntropy) < CustomUtils.FloatComparisonTolerance)
@@ -158,8 +159,9 @@ public class WaveFunction
 		return randomSelectedTileVersionOne;
 	}
 	
-	// WFC
-	// can remove the weights.. can take from processor
+	/**
+	 * Calculates the Shannon entropy for a specific tile
+	 */
 	private float CalculateShannonEntropy(MapTile tile, Dictionary<char, float> weights)
 	{
 		float sumOfWeights = 0;
@@ -183,7 +185,7 @@ public class WaveFunction
     public void CollapseAtCoords(Vector2Int coords)
     {
         MapTile tile = _grid[GetArrayIndexFromCoords(coords)];
-        tile.Collapse(_processor.GetTileWeights());
+        // tile.Collapse(_processor.GetTileWeights());
         
         // propagate the collapsing to the immediate neighbors
         
@@ -241,7 +243,7 @@ public class WaveFunction
                 
                 MapTile neighborTile = _grid[GetArrayIndexFromCoords(neighborCoords)];
 
-                if (neighborTile.IsCollapsed)
+                if (neighborTile.IsCollapsed())
                 {
                     Debug.Log("Skipped - COLLAPSED");
                     continue;

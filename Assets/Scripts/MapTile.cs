@@ -5,20 +5,26 @@ using UnityEngine;
 public class MapTile
 {
 	private readonly Vector2Int _coords;
-
-	public bool IsCollapsed { get; set; } // will make private
-
+	
 	// contains a list of all the possible types and a boolean if the type is possible or not
 	public Dictionary<Color, bool> TileSuperpositions { get; set; }
 
 	private Dictionary<char, bool> _letterSuperpositions;
 
+	private bool _isCollapsed;
+
 	public MapTile(Vector2Int coords, char[] letters)
 	{
 		_coords = coords;
-		
-		IsCollapsed = false;
 
+		InitializeSuperpositions(letters);
+	}
+	
+	/**
+	 * Initialize the dictionary of superpositions setting all to true
+	 */
+	private void InitializeSuperpositions(char[] letters)
+	{
 		_letterSuperpositions = new Dictionary<char, bool>();
 		foreach (char letter in letters)
 		{
@@ -26,80 +32,57 @@ public class MapTile
 			_letterSuperpositions.Add(letter, true);
 		}
 	}
-
-	public Dictionary<char, bool> GetSuperpositions()
-	{
-		return _letterSuperpositions;
-	}
-
-	public override string ToString()
-	{
-		string letterSuperpos = "";
-
-		foreach (KeyValuePair<char,bool> letter in _letterSuperpositions)
-		{
-			letterSuperpos += letter.Key + " " + letter.Value + "; ";
-		}
-		
-		return _coords + " " + letterSuperpos;
-	}
 	
-	// collapse tile based on the weights
-	public void Collapse(Dictionary<Color, float> weights)
+	/**
+	 * Collapse the tile. This selects randomly a tile from the available tiles based on the weight
+	 */
+	public void Collapse(Dictionary<char, float> weights)
 	{
-		// set IsCollapsed to true
-		IsCollapsed = true;
+		_isCollapsed = true;
 		
 		// Calculate the total weight
 		// this will always be 1 tbf..
 		float totalWeight = 0f;
-		foreach (KeyValuePair<Color, float> kvp in weights)
+		foreach (KeyValuePair<char, float> weight in weights)
 		{
-			if (TileSuperpositions[kvp.Key])
+			if (_letterSuperpositions[weight.Key])
 			{
-				totalWeight += kvp.Value;
+				totalWeight += weight.Value;
 			}
 		}
 		
-		// Generate a random number between 0 and the total weight
 		float randomValue = Random.Range(0f, totalWeight);
 		
 		// Iterate through the colors and select one based on weights
 		float cumulativeWeight = 0f;
-		Color selectedColor = Color.white; // default color, can be any valid color
-		foreach (var kvp in weights)
+		char selectedLetter = 'A';
+		foreach (KeyValuePair<char, float> weight in weights)
 		{
-			if (TileSuperpositions[kvp.Key])
+			// if letter superposition is still true
+			if (_letterSuperpositions[weight.Key])
 			{
-				cumulativeWeight += kvp.Value;
+				cumulativeWeight += weight.Value;
 				if (randomValue <= cumulativeWeight)
 				{
-					selectedColor = kvp.Key;
+					selectedLetter = weight.Key;
 					break;
 				}
 			}
 		}
 		
-		// Create a list to store keys that need to be modified
-		List<Color> keysToModify = new List<Color>();
-
-		// Identify keys that need to be modified
-		foreach (var key in TileSuperpositions.Keys)
+		// Set tile to true and rest to false
+		List<char> keys = new List<char>(_letterSuperpositions.Keys);
+		foreach (char letter in keys)
 		{
-			if (key != selectedColor)
+			if (letter == selectedLetter)
 			{
-				keysToModify.Add(key);
+				_letterSuperpositions[letter] = true;
+			}
+			else
+			{
+				_letterSuperpositions[letter] = false;
 			}
 		}
-
-		// Modify TileSuperpositions based on the selected color
-		foreach (var key in keysToModify)
-		{
-			TileSuperpositions[key] = false;
-		}
-
-		// Set the selected color to true
-		TileSuperpositions[selectedColor] = true;
 	}
 	
 	// returns the color the tile should have when it is being drawn on the texture
@@ -108,21 +91,8 @@ public class MapTile
 	// NOTE: tiles which have all options allowed will show as black rather than the average color
 	public Color GetSelectedColor()
 	{
-		if (!IsCollapsed)
+		if (!IsCollapsed())
 		{
-			// not collapsed and can have all possible options
-			// show black
-			
-			// just calculate the average either way
-			
-			
-			// if (!HasBeenPropagated())
-			// {
-			// 	return new Color(0, 0, 0);
-			// }
-
-			// else
-			
 			// average the possible remaining colours
 			// in theory there should be fewer than the max number
 			float totalR = 0f;
@@ -158,30 +128,8 @@ public class MapTile
 		// just for the compiler
 		return new Color(0, 0, 0);
 	}
-	
-	// it just checks if any of the values are false
-	// aka, it has been propagetd at least once,
-	// it possible allowed tiles has been reduced
-	private bool HasBeenPropagated()
-	{
-		foreach (KeyValuePair<Color,bool> pair in TileSuperpositions)
-		{
-			if (!pair.Value)
-			{
-				return true; // Return true if a false value is found
-			}
-		}
 
-		return false; // Return false if no false values are found
-	}
-	
-	// need to figure out this bit here.. 
-	// like I should probably make it consistent throughout tbh
-	public Vector2Int GetCoords()
-	{
-		return _coords;
-	}
-
+	// this should be get allowed letters
 	public List<Color> GetAllowedColors()
 	{
 		List<Color> colors = new List<Color>();
@@ -200,5 +148,32 @@ public class MapTile
 	public void UpdateSuperposition(Color color, bool value)
 	{
 		TileSuperpositions[color] = value;
+	}
+
+	public bool IsCollapsed()
+	{
+		return _isCollapsed;
+	}
+	
+	public Dictionary<char, bool> GetSuperpositions()
+	{
+		return _letterSuperpositions;
+	}
+	
+	public Vector2Int GetCoords()
+	{
+		return _coords;
+	}
+	
+	public override string ToString()
+	{
+		string letterSuperpos = "";
+
+		foreach (KeyValuePair<char,bool> letter in _letterSuperpositions)
+		{
+			letterSuperpos += letter.Key + " " + letter.Value + "; ";
+		}
+		
+		return _coords + " " + letterSuperpos + ", IsCollapsed: " + _isCollapsed;
 	}
 }
