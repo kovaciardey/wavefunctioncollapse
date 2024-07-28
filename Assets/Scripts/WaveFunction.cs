@@ -6,14 +6,11 @@ using Random = UnityEngine.Random;
 
 public class WaveFunction
 {
-	private MapTile[] _grid;
-
 	private readonly int _width;
 	private readonly ImageProcessor _processor;
 	
-	// I could do something with a stack maybe? and just pop an item out whenever a tile is selected
-	// (might need a list with actual removal of elements)
-	
+	private MapTile[] _grid;
+
  	public WaveFunction(int width, ImageProcessor processor)
 	{
 		_width = width;
@@ -62,18 +59,12 @@ public class WaveFunction
 	 */
 	public void Iterate()
 	{
-		// select tile to collapse
 		MapTile tile = GetMinimumEntropyTile();
 		// MapTile tile = GetRandomUncollapsedWithTheLowestEntropyOld(); // for experimental purposes once the the whole thing is refactored
 		
-		// collapse
 		tile.Collapse(_processor.GetLetterWeights()); 
 		
-		// propagate
-		
-		
-		// collapse first
-		// CollapseAtCoords(GetRandomUncollapsedWithTheLowestEntropyOld().GetCoords());
+		Propagate(tile);
 	}
 	
 	/**
@@ -180,121 +171,49 @@ public class WaveFunction
 		return (float) Math.Log(sumOfWeights) - (sumOfWeightLogWeights / sumOfWeights);
 	}
 	
-	 // WFC
-    // we'll reserve a day specifically for this one
-    public void CollapseAtCoords(Vector2Int coords)
+	/**
+	 * Propagate the collapse of a tile to the rest of the neighbors
+	 */
+    private void Propagate(MapTile tile)
     {
-        MapTile tile = _grid[GetArrayIndexFromCoords(coords)];
-        // tile.Collapse(_processor.GetTileWeights());
-        
-        // propagate the collapsing to the immediate neighbors
-        
-        // initialise the stack 
-        
-        // while length stack > 0
-        // remove last element 
-        // get the colors
-        
-        // for every DIRECTION 
-        // get the tile at the coords
-        
-        // for every OTHER_COLOR 
-        // get all the possible TILE_COLORS
-        // check all existing pairs CURRENT_COLOR, OTHER_COLOR, DIRECTION
-        
-        // if there are no possible pairs for the OTHER_COLOR
-        // set OTHER_COLOR to false on tile
-        
-        // add OTHER_COORDS to stack
-        
-        // Define the directions: up, down, left, right
-        
-        // push the tile that was just collapsed
         Stack<MapTile> stack = new Stack<MapTile>();
         stack.Push(tile);
-        
-        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
         while (stack.Count > 0)
         {
             MapTile currentTile = stack.Pop();
             
-            // Debug.Log("TILE " + _processor.GetColorLetter(currentTile.GetAllowedColors()[0]));
-            // Debug.Log("Allowed Neighbours");
-            //
-            // foreach (Color tileColor in currentTile.GetAllowedColors())
-            // {
-            //     Debug.Log(_processor.GetColorLetter(tileColor));
-            // }
-            //
-            // break;
-            
-            foreach (Vector2Int direction in directions)
+            foreach (Vector2Int direction in CustomUtils.Directions)
             {
-                // Debug.Log(_processor.GetDirectionName(direction).ToUpper() + " - " + _processor.GetColorLetter(currentTile.GetAllowedColors()[0]) + "===================================================================================");
-                
+	            // get all neighbors and skip collapsed and out of bounds tiles
                 Vector2Int neighborCoords = currentTile.GetCoords() + direction;
                 
-                if (!InGrid(neighborCoords))
+                if (!CustomUtils.IsWithinBounds(neighborCoords.x, neighborCoords.y, _width, _width))
                 {
-                    Debug.Log("Skipped - NOT in grid");
                     continue;
                 }
                 
-                MapTile neighborTile = _grid[GetArrayIndexFromCoords(neighborCoords)];
+                MapTile neighborTile = _grid[CustomUtils.GetArrayIndexFromCoords(neighborCoords, _width)];
 
                 if (neighborTile.IsCollapsed())
                 {
-                    Debug.Log("Skipped - COLLAPSED");
                     continue;
                 }
                 
-                // Debug.Log("OTHER Count: " + neighborTile.GetAllowedColors().Count);
-                
-                // this is kinda ugly :)) 
-                foreach (Color otherColor in neighborTile.GetAllowedColors()) 
+                foreach (char otherLetter in neighborTile.GetAllowedLetters()) 
                 {
-                    // Debug.Log("OTHER Color" + ": " + _processor.GetColorLetter(otherColor));
-                    
-                    foreach (Color tileColor in currentTile.GetAllowedColors())
+                    foreach (char tileLetter in currentTile.GetAllowedLetters())
                     {
-                        bool foundPair = false;
-                        
-                        // Debug.Log("TILE: " + tileColor);
-                        
-                        Tuple<Color, Color, string> tempTuple = new Tuple<Color, Color, string>(tileColor, otherColor, CustomUtils.GetDirectionString(direction));
-                        // Debug.Log($"Temp Tuple: {_processor.GetColorLetter(tempTuple.Item1)}, {_processor.GetColorLetter(tempTuple.Item2)}, {tempTuple.Item3}");
-                        
-                        // get all the tuples in the list of possible pairs
-                        
-                        // TODO: use the hashset to check, cos jeez.. 
-                        foreach (Tuple<Color,Color,string> dataTuple in _processor.GetTilePairs())
+                        Tuple<char, char, string> tempTuple = new Tuple<char, char, string>(tileLetter, otherLetter, CustomUtils.GetDirectionString(direction));
+
+                        if (!_processor.GetPairsList().Contains(tempTuple))
                         {
-                            if (CompareTuple(dataTuple, tempTuple))
-                            {
-                                Debug.Log("PAIR FOUND");
-                                foundPair = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!foundPair)
-                        {
-                            // Debug.Log("Set to False: " + _processor.GetColorLetter(otherColor));
-                            
-                            neighborTile.UpdateSuperposition(otherColor, false);
-                            // stack.Push(neighborTile); // this might add multiple times?
+	                        neighborTile.UpdateSuperposition(otherLetter, false);
+	                        stack.Push(neighborTile);
                         }
                     }
-                    // Debug.Log("OTHER " + _processor.GetDirectionName(direction) + ": " + neighborTile.GetAllowedColors().Count);
-
-                    // break; // foreach (Color otherColor in neighborTile.GetAllowedColors()) 
                 }
-
-                // break; // foreach (Vector2Int direction in directions)
             }
-
-            // break; // just do the propagation only for the main tile
         }
     }
     
@@ -321,34 +240,5 @@ public class WaveFunction
 	public MapTile[] GetMap()
 	{
 		return _grid;
-	}
-	
-	/**
-	 * Checks if a set of coords in within the bounds of the grid
-	 */
-	// use the custom utils
-	private bool InGrid(Vector2Int coords)
-	{
-		// need to put height here when making n * m shape
-		
-		if (coords.x >= 0 && coords.x < _width && coords.y >= 0 && coords.y < _width)
-		{
-			return true; 
-		}
-        
-		return false; 
-	}
-	
-	/**
-	 * Checks if the pair of 3-tuples are identical
-	 */
-	private bool CompareTuple(
-		Tuple<Color, Color, string> dataTuple, 
-		Tuple<Color, Color, string> tempTuple
-	)
-	{
-		return dataTuple.Item1 == tempTuple.Item1 && 
-		       dataTuple.Item2 == tempTuple.Item2 &&
-		       dataTuple.Item3 == tempTuple.Item3;
 	}
 }

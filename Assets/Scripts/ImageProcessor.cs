@@ -16,8 +16,6 @@ public class ImageProcessor
 	private readonly TextureImporter _importer;
 	private readonly string _assetPath;
 	
-	private List<Tuple<Color, Color, string>> _uniquePairs = new List<Tuple<Color, Color, string>>();
-	
 	// idk if char was the best type for the letter
 	private int _totalPixels;
 	private char[] _letters; // the letter representation of the input image colour array
@@ -230,13 +228,4 @@ public class ImageProcessor
     {
 	    return _letterPairs;
     }
-    
-    ///// COLOR IMPLEMENTATION! KEEPING HERE WHILE REFACTORING ABOVE
-    ///
-    /// probably most of these functions will disappear
-    
-	public List<Tuple<Color, Color, string>> GetTilePairs()
-	{
-		return _uniquePairs;
-	}
 }

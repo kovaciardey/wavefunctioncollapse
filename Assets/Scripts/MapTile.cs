@@ -58,7 +58,7 @@ public class MapTile
 		char selectedLetter = 'A';
 		foreach (KeyValuePair<char, float> weight in weights)
 		{
-			// if letter superposition is still true
+			// if letter superposition is true
 			if (_letterSuperpositions[weight.Key])
 			{
 				cumulativeWeight += weight.Value;
@@ -84,11 +84,36 @@ public class MapTile
 			}
 		}
 	}
+
+	/**
+	 * Returns a list of all the possible letters that the tile can still collapse into
+	 */
+	public List<char> GetAllowedLetters()
+	{
+		List<char> letters = new List<char>();
+
+		foreach (KeyValuePair<char,bool> pair in _letterSuperpositions)
+		{
+			if (pair.Value)
+			{
+				letters.Add(pair.Key);
+			}
+		}
+
+		return letters;
+	}
+	
+	/**
+	 * Update a letter super position with the given value
+	 */
+	public void UpdateSuperposition(char letter, bool value)
+	{
+		_letterSuperpositions[letter] = value;
+	}
 	
 	// returns the color the tile should have when it is being drawn on the texture
 	// it has nothing to do with the calculation of the WFC. just for display
-	
-	// NOTE: tiles which have all options allowed will show as black rather than the average color
+	// this could possibly be moved out of here?
 	public Color GetSelectedColor()
 	{
 		if (!IsCollapsed())
@@ -129,27 +154,6 @@ public class MapTile
 		return new Color(0, 0, 0);
 	}
 
-	// this should be get allowed letters
-	public List<Color> GetAllowedColors()
-	{
-		List<Color> colors = new List<Color>();
-
-		foreach (KeyValuePair<Color,bool> pair in TileSuperpositions)
-		{
-			if (pair.Value)
-			{
-				colors.Add(pair.Key);
-			}
-		}
-
-		return colors;
-	}
-
-	public void UpdateSuperposition(Color color, bool value)
-	{
-		TileSuperpositions[color] = value;
-	}
-
 	public bool IsCollapsed()
 	{
 		return _isCollapsed;
@@ -174,6 +178,6 @@ public class MapTile
 			letterSuperpos += letter.Key + " " + letter.Value + "; ";
 		}
 		
-		return _coords + " " + letterSuperpos + ", IsCollapsed: " + _isCollapsed;
+		return _coords + " " + letterSuperpos + " IsCollapsed: " + _isCollapsed;
 	}
 }

@@ -43,12 +43,13 @@ public class GameController : MonoBehaviour
         Debug.Log("Started Generation");
 
         WaveFunction wf = new WaveFunction(width, _processor);
+
+        while (wf.HasUncollapsed())
+        {
+            wf.Iterate();
+        }
         
-        wf.Iterate();
-        
-        // while has uncollapsed
-        
-            // wfc.iterate
+        CustomUtils.DebugWaveFunctionGrid(wf.GetMap());
         
         // DrawTexture(wf.GetColorMap());
         

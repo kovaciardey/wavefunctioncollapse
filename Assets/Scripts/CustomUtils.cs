@@ -80,7 +80,7 @@ public static class CustomUtils
      */
     public static void DebugTuple(Tuple<char, char, string> tuple)
     {
-        Debug.Log($"Temp Tuple: {tuple.Item1}, {tuple.Item2}, {tuple.Item3}");
+        Debug.Log($"Tuple: {tuple.Item1}, {tuple.Item2}, {tuple.Item3}");
     }
     
     /**
