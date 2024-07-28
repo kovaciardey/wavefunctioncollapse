@@ -61,6 +61,8 @@ public class WaveFunction
 	{
 		MapTile tile = GetMinimumEntropyTile();
 		// MapTile tile = GetRandomUncollapsedWithTheLowestEntropyOld(); // for experimental purposes once the the whole thing is refactored
+
+		if (tile == null) { return; }
 		
 		tile.Collapse(_processor.GetLetterWeights()); 
 		
@@ -209,32 +211,62 @@ public class WaveFunction
                         if (!_processor.GetPairsList().Contains(tempTuple))
                         {
 	                        neighborTile.UpdateSuperposition(otherLetter, false);
-	                        stack.Push(neighborTile);
+	                        // stack.Push(neighborTile);
                         }
                     }
                 }
+                
+                // TODO: I think the propagation will happen better if the neighbor tile gets added to the stack here
             }
         }
     }
     
-	// WFC
-	// map letter to color using the processor array
+	/**
+	 * Create a Color array based on the list of chars
+	 */
 	public Color[] GetColorMap()
 	{
-		Color[] outputColorMap = new Color[_width * _width];
-		foreach (MapTile tile in _grid)
+		char[] letterMap = CreateLetterMap();
+		Color[] colors = new Color[letterMap.Length];
+		
+		// flip the color-letter map
+		Dictionary<char, Color> charColorDictionary = new Dictionary<char, Color>();
+		foreach (KeyValuePair<Color, char> kvp in _processor.GetColorLetterMap())
 		{
-			outputColorMap[GetArrayIndexFromCoords(tile.GetCoords())] = tile.GetSelectedColor();
+			charColorDictionary[kvp.Value] = kvp.Key;
 		}
 
-		return outputColorMap;
+		for (int i = 0; i < letterMap.Length; i++)
+		{
+			char c = letterMap[i];
+			if (charColorDictionary.TryGetValue(c, out Color color))
+			{
+				colors[i] = color;
+			}
+			else
+			{
+				// Handle case where char is not found in dictionary
+				colors[i] = Color.black; // Default to black or any other default color
+			}
+		}
+
+		return colors;
 	}
-    
-	// WFC
-	// remove.. use function from custom utils
-	private int GetArrayIndexFromCoords(Vector2Int coords)
+	
+	/**
+	 * Creates an array of letters with all the collapsed values
+	 *
+	 * NOTE: This assumes that all the tiles it iterates through have been collapsed
+	 */
+	private char[] CreateLetterMap()
 	{
-		return coords.x * _width + coords.y;
+		char[] letterMap = new char[_width * _width];
+		foreach (MapTile tile in _grid)
+		{
+			letterMap[CustomUtils.GetArrayIndexFromCoords(tile.GetCoords(), _width)] = tile.GetCollapsedValue();
+		}
+
+		return letterMap;
 	}
     
 	public MapTile[] GetMap()

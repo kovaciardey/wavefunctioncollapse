@@ -111,49 +111,24 @@ public class MapTile
 		_letterSuperpositions[letter] = value;
 	}
 	
-	// returns the color the tile should have when it is being drawn on the texture
-	// it has nothing to do with the calculation of the WFC. just for display
-	// this could possibly be moved out of here?
-	public Color GetSelectedColor()
+	/**
+	 * Returns the letter after the tile has been collapsed
+	 *
+	 * NOTE: This assumes the tile has already been collapsed
+	 */
+	public char GetCollapsedValue()
 	{
-		if (!IsCollapsed())
+		foreach (KeyValuePair<char,bool> letterSuperpos in _letterSuperpositions)
 		{
-			// average the possible remaining colours
-			// in theory there should be fewer than the max number
-			float totalR = 0f;
-			float totalG = 0f;
-			float totalB = 0f;
-		
-			foreach (KeyValuePair<Color, bool> kvp in TileSuperpositions)
+			if (letterSuperpos.Value)
 			{
-				if (kvp.Value)
-				{
-					totalR += kvp.Key.r;
-					totalG += kvp.Key.g;
-					totalB += kvp.Key.b;
-				}
-			}
-		
-			float avgR = totalR / TileSuperpositions.Count;
-			float avgG = totalG / TileSuperpositions.Count;
-			float avgB = totalB / TileSuperpositions.Count;
-		
-			return new Color(avgR, avgG, avgB);
-		}
-		
-		// in theory there should be only one that is true at this point
-		foreach (KeyValuePair<Color,bool> pair in TileSuperpositions)
-		{
-			if (pair.Value)
-			{
-				return pair.Key;
+				return letterSuperpos.Key;
 			}
 		}
-		
-		// just for the compiler
-		return new Color(0, 0, 0);
-	}
 
+		return 'A'; // default response. should never be reached
+	}
+	
 	public bool IsCollapsed()
 	{
 		return _isCollapsed;
