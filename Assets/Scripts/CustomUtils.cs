@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /**
@@ -76,19 +77,19 @@ public static class CustomUtils
     }
     
     /**
-     * Debug.Log a 3-tuple
-     */
-    public static void DebugTuple(Tuple<char, char, string> tuple)
-    {
-        Debug.Log($"Tuple: {tuple.Item1}, {tuple.Item2}, {tuple.Item3}");
-    }
-    
-    /**
      * Debug.log a separator
      */
-    public static void DebugSeparator()
+    public static void DebugSeparator(int times = 1)
     {
-        Debug.Log("================");
+        string separator = "================";
+        
+        string result = separator;
+        for (int i = 1; i < times; i++)
+        {
+            result += separator;
+        }
+        
+        Debug.Log(result);
     }
 
     /**

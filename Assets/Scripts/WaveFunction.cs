@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -180,7 +181,7 @@ public class WaveFunction
     {
         Stack<MapTile> stack = new Stack<MapTile>();
         stack.Push(tile);
-
+        
         while (stack.Count > 0)
         {
             MapTile currentTile = stack.Pop();
@@ -202,21 +203,28 @@ public class WaveFunction
                     continue;
                 }
                 
-                foreach (char otherLetter in neighborTile.GetAllowedLetters()) 
+                foreach (char otherLetter in neighborTile.GetAllowedLetters())
                 {
+	                // create bool array
+	                bool[] pairsAllowed = new bool[currentTile.GetAllowedLetters().Count];
+
+	                int counter = 0;
                     foreach (char tileLetter in currentTile.GetAllowedLetters())
                     {
                         Tuple<char, char, string> tempTuple = new Tuple<char, char, string>(tileLetter, otherLetter, CustomUtils.GetDirectionString(direction));
 
-                        if (!_processor.GetPairsList().Contains(tempTuple))
-                        {
-	                        neighborTile.UpdateSuperposition(otherLetter, false);
-	                        // stack.Push(neighborTile);
-                        }
+                        pairsAllowed[counter] = _processor.GetPairsList().Contains(tempTuple);
+
+                        counter += 1;
+                    }
+					
+                    // check if there are any true values in the array
+                    if (!pairsAllowed.Any(b => b))
+                    {
+	                    neighborTile.UpdateSuperposition(otherLetter, false);
+	                    stack.Push(neighborTile);
                     }
                 }
-                
-                // TODO: I think the propagation will happen better if the neighbor tile gets added to the stack here
             }
         }
     }

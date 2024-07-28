@@ -43,10 +43,7 @@ public class GameController : MonoBehaviour
         Debug.Log("Started Generation");
 
         WaveFunction wf = new WaveFunction(width, _processor);
-        
-        // TODO: may need some null checks here to avoid infinite loops 
-        // TODO: and to figure out why the loop happens
-        // TODO: WFC_Input_5 seems to get stuck in an infinite loop
+
         while (wf.HasUncollapsed())
         {
             wf.Iterate();
