@@ -7,11 +7,13 @@ namespace UI
     {
         public Image tile;
         public Text weightText;
+        public Text letterText;
 
-        public void SetColorAndText(Color color, string text)
+        public void DisplayData(Color color, string text, char letter)
         {
             tile.color = color;
             weightText.text = text;
+            letterText.text = letter.ToString();
         }
     }
 }

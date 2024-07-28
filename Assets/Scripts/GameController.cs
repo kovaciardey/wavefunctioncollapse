@@ -1,104 +1,30 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UI;
 using UnityEngine;
 using UnityEngine.UI;
-using Random = UnityEngine.Random;
 
-/**
- *
- * BIG TODO:
- *  - have a look over the code:
- *      review and refactor where necessary
- *          I like the idea with an calculateIteration function
- *      add some extra comments if needed
- *
- *  - a system which records the moves and the logs for each move
- *      so they can be displayed step by step via a slider while the simulation is not running anymore
- *
- *      for the future, one Idea would be to stop at a specific step, manually add collapse a few tiles and see what happens from there
- *
- *      - a way to load that information from the file (should only be done on demand, will have a toggle or smth)
- *      mostly for debugging purposes
- *          I don't think it will have any real benefit on performance. I might still implement it just to see how unity works with files
- *
- *  - refactor this to work with letters in the background
- *      assign the images to the letters in post processing
- *      (especially if the above system is implemented)
- * 
- *  - statistics about efficiency
- *      time for execution, nr of loops and so on
- *      entropy calculations
- *
- *  - add 2 * 2 support (which wil try to be translated into n * n)
- *      initially it should not worry about different rotations
- *
- *  - if I do the above thing with the letters, I will need to do a lot of work with the rotations and the symmetries
- *
- *  - figure out the bullshit issue with importing the images to make sure they're point
- *      filtered so we only deal with the wanted colours
- *
- *  A menu in game that allows me to see all the pairs somehow, and maybe allows me to enable/disable a specific pair?
- *
- *  button to Export the output?
- *
- *  - QUESTION: would I be able to extend this to irregular shapes? that aren't necessarily squares?
- * 
- */
-
-/**
- * Ideas for optimization
- *         // i think one possible optimization for the entropy would be not to calculate the entropy for the tiles
-        //  which still have all the possible values 
-
-        // or could we rather precalculate the entropies based on all the possible combinations of tiles?
-        // it might work for simpler input images which don't have too many possible combinations
-        // but it might be worth trying it out, see how it performs
-            // this might not work, cos what if there are tiles which can have all possible neighbours?
-            // this might be a bit of an edge case tho
-        
-        // or maybe keep track of the uncollapsed tiles in a separate array and only iterate through that
-
-        // maybe adding more debug info and values on the screen? 
-        //  what sort of things would be useful?
-            // could hover the mouse over a pixel and see some data about it, like status, entropy and all the stuff
-            
-        // for the HasUncollapsed function, maybe have a tile counter which counts down(?) from the max nr of tiles, 
-            everytime a tile gets collapsed. once it reaches 0 returns false. so I don't have to iterate through the array everytime  
- */
 public class GameController : MonoBehaviour
 {
+    [Header("Generation Settings")]
     public Texture2D input;
-
+    
     // will work with square output for now and I'll make it rectangle later
     public int width = 5;
 
-    public float floatComparisonTolerance = 0.00005f;
-    
     [Header("Display")]
     public Image inputDisplay;
+
     public RawImage outputDisplay;
     public Transform tileWeightParent;
     public GameObject tileWeightDisplayPrefab;
-    public Text buttonText;
-
-    public String startTextValue = "Start";
-    public String resetTextValue = "Reset";
-
+    
     [Header("Display Settings")] 
     public float inputDisplayWidth = 200f;
     
-    // rethink this bit here cos it's not working as I imagined
-    [Header("Simulation Settings")] 
-    [Range(1f, 300f)]
-    public float slowdownFactor;
-
-    private ImageProcessor _processor;
-
-    private WaveFunction _wf;
+    // keeping the header here for the replay functionality
+    // [Header("Simulation Settings")] 
     
-    private bool _isGenerating = false;
+    private ImageProcessor _processor;
     
     void Start()
     {
@@ -107,31 +33,28 @@ public class GameController : MonoBehaviour
         ProcessInput();
 
         DrawTileWeightPanels();
-
     }
     
-    void Update()
+    /**
+     * Start the WFC Generation
+     */
+    public void Generate()
     {
-        if (_isGenerating)
-        {
-            DrawTexture(_wf.GetColorMap());
-        }
-    }
+        Debug.Log("Started Generation");
 
-    public void StartSimulation()
-    {
-        // ResetSimulation();
-
-        _isGenerating = true;
+        WaveFunction wf = new WaveFunction(width, _processor);
         
-        GenerateWithDelay(_processor.GetUniqueTiles());
-    }
-
-    public void StopSimulation()
-    {
-        _isGenerating = false;
-
-        StopCoroutine(GetAnimateWfc());
+        // TODO: may need some null checks here to avoid infinite loops 
+        // TODO: and to figure out why the loop happens
+        // TODO: WFC_Input_5 seems to get stuck in an infinite loop
+        while (wf.HasUncollapsed())
+        {
+            wf.Iterate();
+        }
+        
+        DrawTexture(wf.GetColorMap());
+        
+        Debug.Log("End Generation");
     }
 
     /**
@@ -180,17 +103,23 @@ public class GameController : MonoBehaviour
      */
     private void DrawTileWeightPanels()
     {
-        // show the weights as a fraction on the screen
-        int index = 0;
-        foreach (KeyValuePair<Color, string> kvp in _processor.GetTileWeightsDisplay())
-        {
-            // Debug.Log("Color: " + kvp.Key + ", Display: " + kvp.Value);
+        int totalPixels = _processor.GetTotalPixels();
+        Dictionary<Color, char> colorLetterMap = _processor.GetColorLetterMap();
+        Dictionary<char, int> letterCounts = _processor.GetLetterCounts();
 
+        int index = 0;
+        foreach (KeyValuePair<Color, char> kvp in colorLetterMap)
+        {
             Vector3 position = new Vector3(0f, index * tileWeightDisplayPrefab.GetComponent<RectTransform>().rect.height, 0f);
             
-            // I could look into the better UI manager thingy later on.. but that is not the point right now
+            // calculate panel values
+            Color color = kvp.Key;
+            string ratioText = letterCounts[kvp.Value] + "/" + totalPixels;
+            char letter = kvp.Value;
+            
+            // create and assign values
             GameObject tileWeightDisplay = Instantiate(tileWeightDisplayPrefab, position, Quaternion.identity);
-            tileWeightDisplay.GetComponent<TileWeightDisplay>().SetColorAndText(kvp.Key, kvp.Value);
+            tileWeightDisplay.GetComponent<TileWeightDisplay>().DisplayData(color, ratioText, letter);
             
             tileWeightDisplay.transform.SetParent(tileWeightParent);
 
@@ -208,105 +137,9 @@ public class GameController : MonoBehaviour
     }
     
     /**
-     * Just moved all those things to this function for now
+     * Create a texture from the given color map
+     * Display the texture on the panel
      */
-    private void RandomDebugs()
-    {
-        // debug - tile Count
-        // foreach (KeyValuePair<Color, int> kvp in processor.GetTileCount())
-        // {
-        //     Debug.Log("Color: " + kvp.Key + ", Count: " + kvp.Value);
-        // }
-        
-        // debug - weights as float
-        // foreach (KeyValuePair<Color, float> kvp in processor.GetTileWeights())
-        // {
-        //     Debug.Log("Color: " + kvp.Key + ", Weight: " + kvp.Value);
-        // }
-        
-        // debug - all the unique tiles
-        // foreach (Color color in _processor.GetUniqueTiles())
-        // {
-        //     Debug.Log(color);
-        // }
-        
-        // debug - all the unique pairs
-        // Debug.Log(_processor.GetTilePairs().Count);
-        // foreach (Tuple<Color, Color, string> pair in _processor.GetTilePairs())
-        // {
-        //     Debug.Log("Unique Pair Added: " + pair.Item1 + ", " + pair.Item2 + ", " + pair.Item3);
-        // }
-        
-        // debug - show the allowed neighbors for each tile
-        // Debug.Log(_processor.GetAllowedNeighbors().Count);
-        // foreach (KeyValuePair<Color,Dictionary<string,List<Color>>> tileKvp in _processor.GetAllowedNeighbors())
-        // {
-        //     string debugString = "COLOR: " + tileKvp.Key;
-        //
-        //     int index2 = 0;
-        //     foreach (KeyValuePair<string,List<Color>> neighborKvp in tileKvp.Value)
-        //     {
-        //         debugString += ", DIRECTION " + index2 + "_" + neighborKvp.Key + ": ";
-        //
-        //         foreach (Color color in neighborKvp.Value)
-        //         {
-        //             debugString += color;
-        //         }
-        //         
-        //         index2 += 1;
-        //     }
-        //     
-        //     Debug.Log(debugString);
-        // }
-
-    }
-    
-    // "Model"
-    private void GenerateWithDelay(Color[] colors)
-    {
-        _wf = new WaveFunction(width, colors, _processor, floatComparisonTolerance);
-        
-        StartCoroutine(GetAnimateWfc());
-    }
-    
-    // "Model"
-    private IEnumerator GetAnimateWfc()
-    {
-        // collapse first
-        _wf.CollapseAtCoords(_wf.GetRandomUncollapsedWithTheLowestEntropy().GetCoords());
-        
-        // do wfc
-        int iteration = 0;
-        while (_wf.HasUncollapsed())
-        {
-            // could do smth in the inspector for this
-            // if (iteration == 0)
-            // {
-            //     break;
-            // }
-
-            if (!_isGenerating)
-            {
-                break;
-            }
-            
-            MapTile randomTile = _wf.GetRandomUncollapsedWithTheLowestEntropy();
-            
-            if (randomTile == null)
-            {
-                break;
-            }
-            
-            _wf.CollapseAtCoords(randomTile.GetCoords());
-
-            iteration += 1;
-            
-            yield return new WaitForSeconds(1f / slowdownFactor);
-        }
-        
-        // for the future, trigger a flag or smth so that it stops the coroutine when the wfc stops
-    }
-    
     private void DrawTexture(Color[] colorMap)
     {
         Texture2D texture = new Texture2D (width, width)

@@ -4,182 +4,155 @@ using UnityEngine;
 
 public class MapTile
 {
-	private Vector2Int _coords;
-
-	public bool IsCollapsed { get; set; }
-
+	private readonly Vector2Int _coords;
+	
 	// contains a list of all the possible types and a boolean if the type is possible or not
 	public Dictionary<Color, bool> TileSuperpositions { get; set; }
 
-	public MapTile(Vector2Int coords, Color[] possibleColors)
+	private Dictionary<char, bool> _letterSuperpositions;
+
+	private bool _isCollapsed;
+
+	public MapTile(Vector2Int coords, char[] letters)
 	{
 		_coords = coords;
-		
-		IsCollapsed = false;
-		
-		TileSuperpositions = new Dictionary<Color, bool>();
-		foreach (Color color in possibleColors)
+
+		InitializeSuperpositions(letters);
+	}
+	
+	/**
+	 * Initialize the dictionary of superpositions setting all to true
+	 */
+	private void InitializeSuperpositions(char[] letters)
+	{
+		_letterSuperpositions = new Dictionary<char, bool>();
+		foreach (char letter in letters)
 		{
 			// initialize all possible positions to true
-			TileSuperpositions.Add(color, true);
+			_letterSuperpositions.Add(letter, true);
 		}
 	}
 	
-	// collapse tile based on the weights
-	public void Collapse(Dictionary<Color, float> weights)
+	/**
+	 * Collapse the tile. This selects randomly a tile from the available tiles based on the weight
+	 */
+	public void Collapse(Dictionary<char, float> weights)
 	{
-		// set IsCollapsed to true
-		IsCollapsed = true;
+		_isCollapsed = true;
 		
 		// Calculate the total weight
 		// this will always be 1 tbf..
 		float totalWeight = 0f;
-		foreach (KeyValuePair<Color, float> kvp in weights)
+		foreach (KeyValuePair<char, float> weight in weights)
 		{
-			if (TileSuperpositions[kvp.Key])
+			if (_letterSuperpositions[weight.Key])
 			{
-				totalWeight += kvp.Value;
+				totalWeight += weight.Value;
 			}
 		}
 		
-		// Generate a random number between 0 and the total weight
 		float randomValue = Random.Range(0f, totalWeight);
 		
 		// Iterate through the colors and select one based on weights
 		float cumulativeWeight = 0f;
-		Color selectedColor = Color.white; // default color, can be any valid color
-		foreach (var kvp in weights)
+		char selectedLetter = 'A';
+		foreach (KeyValuePair<char, float> weight in weights)
 		{
-			if (TileSuperpositions[kvp.Key])
+			// if letter superposition is true
+			if (_letterSuperpositions[weight.Key])
 			{
-				cumulativeWeight += kvp.Value;
+				cumulativeWeight += weight.Value;
 				if (randomValue <= cumulativeWeight)
 				{
-					selectedColor = kvp.Key;
+					selectedLetter = weight.Key;
 					break;
 				}
 			}
 		}
 		
-		// Create a list to store keys that need to be modified
-		List<Color> keysToModify = new List<Color>();
-
-		// Identify keys that need to be modified
-		foreach (var key in TileSuperpositions.Keys)
+		// Set tile to true and rest to false
+		List<char> keys = new List<char>(_letterSuperpositions.Keys);
+		foreach (char letter in keys)
 		{
-			if (key != selectedColor)
+			if (letter == selectedLetter)
 			{
-				keysToModify.Add(key);
+				_letterSuperpositions[letter] = true;
+			}
+			else
+			{
+				_letterSuperpositions[letter] = false;
 			}
 		}
-
-		// Modify TileSuperpositions based on the selected color
-		foreach (var key in keysToModify)
-		{
-			TileSuperpositions[key] = false;
-		}
-
-		// Set the selected color to true
-		TileSuperpositions[selectedColor] = true;
 	}
-	
-	// returns the color the tile should have when it is being drawn on the texture
-	// it has nothing to do with the calculation of the WFC. just for display
-	
-	// NOTE: tiles which have all options allowed will show as black rather than the average color
-	public Color GetSelectedColor()
-	{
-		if (!IsCollapsed)
-		{
-			// not collapsed and can have all possible options
-			// show black
-			
-			// just calculate the average either way
-			
-			
-			// if (!HasBeenPropagated())
-			// {
-			// 	return new Color(0, 0, 0);
-			// }
 
-			// else
-			
-			// average the possible remaining colours
-			// in theory there should be fewer than the max number
-			float totalR = 0f;
-			float totalG = 0f;
-			float totalB = 0f;
-		
-			foreach (KeyValuePair<Color, bool> kvp in TileSuperpositions)
-			{
-				if (kvp.Value)
-				{
-					totalR += kvp.Key.r;
-					totalG += kvp.Key.g;
-					totalB += kvp.Key.b;
-				}
-			}
-		
-			float avgR = totalR / TileSuperpositions.Count;
-			float avgG = totalG / TileSuperpositions.Count;
-			float avgB = totalB / TileSuperpositions.Count;
-		
-			return new Color(avgR, avgG, avgB);
-		}
-		
-		// in theory there should be only one that is true at this point
-		foreach (KeyValuePair<Color,bool> pair in TileSuperpositions)
+	/**
+	 * Returns a list of all the possible letters that the tile can still collapse into
+	 */
+	public List<char> GetAllowedLetters()
+	{
+		List<char> letters = new List<char>();
+
+		foreach (KeyValuePair<char,bool> pair in _letterSuperpositions)
 		{
 			if (pair.Value)
 			{
-				return pair.Key;
-			}
-		}
-		
-		// just for the compiler
-		return new Color(0, 0, 0);
-	}
-	
-	// it just checks if any of the values are false
-	// aka, it has been propagetd at least once,
-	// it possible allowed tiles has been reduced
-	private bool HasBeenPropagated()
-	{
-		foreach (KeyValuePair<Color,bool> pair in TileSuperpositions)
-		{
-			if (!pair.Value)
-			{
-				return true; // Return true if a false value is found
+				letters.Add(pair.Key);
 			}
 		}
 
-		return false; // Return false if no false values are found
+		return letters;
 	}
 	
-	// need to figure out this bit here.. 
-	// like I should probably make it consistent throughout tbh
+	/**
+	 * Update a letter super position with the given value
+	 */
+	public void UpdateSuperposition(char letter, bool value)
+	{
+		_letterSuperpositions[letter] = value;
+	}
+	
+	/**
+	 * Returns the letter after the tile has been collapsed
+	 *
+	 * NOTE: This assumes the tile has already been collapsed
+	 */
+	public char GetCollapsedValue()
+	{
+		foreach (KeyValuePair<char,bool> letterSuperpos in _letterSuperpositions)
+		{
+			if (letterSuperpos.Value)
+			{
+				return letterSuperpos.Key;
+			}
+		}
+
+		return 'A'; // default response. should never be reached
+	}
+	
+	public bool IsCollapsed()
+	{
+		return _isCollapsed;
+	}
+	
+	public Dictionary<char, bool> GetSuperpositions()
+	{
+		return _letterSuperpositions;
+	}
+	
 	public Vector2Int GetCoords()
 	{
 		return _coords;
 	}
-
-	public List<Color> GetAllowedColors()
+	
+	public override string ToString()
 	{
-		List<Color> colors = new List<Color>();
+		string letterSuperpos = "";
 
-		foreach (KeyValuePair<Color,bool> pair in TileSuperpositions)
+		foreach (KeyValuePair<char,bool> letter in _letterSuperpositions)
 		{
-			if (pair.Value)
-			{
-				colors.Add(pair.Key);
-			}
+			letterSuperpos += letter.Key + " " + letter.Value + "; ";
 		}
-
-		return colors;
-	}
-
-	public void UpdateSuperposition(Color color, bool value)
-	{
-		TileSuperpositions[color] = value;
+		
+		return _coords + " " + letterSuperpos + " IsCollapsed: " + _isCollapsed;
 	}
 }
