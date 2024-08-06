@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UI;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
@@ -20,11 +21,15 @@ public class GameController : MonoBehaviour
     
     [Header("Display Settings")] 
     public float inputDisplayWidth = 200f;
+
+    public int generationStep = 0;
     
     // keeping the header here for the replay functionality
     // [Header("Simulation Settings")] 
     
     private ImageProcessor _processor;
+
+    private ReplayWfc _replay;
     
     void Start()
     {
@@ -48,10 +53,20 @@ public class GameController : MonoBehaviour
         {
             wf.Iterate();
         }
+
+        _replay = wf.GetReplay();
         
-        DrawTexture(wf.GetColorMap());
+        DrawTexture(_replay.GetResult());
         
         Debug.Log("End Generation");
+    }
+    
+    /**
+     * Draw a specific step of the generation
+     */
+    public void DrawGenerationStep()
+    {
+        DrawTexture(_replay.GetColorMapAtStep(generationStep));
     }
 
     /**

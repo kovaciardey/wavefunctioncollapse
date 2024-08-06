@@ -11,11 +11,15 @@ public class WaveFunction
 	private readonly ImageProcessor _processor;
 	
 	private MapTile[] _grid;
+	
+	private readonly ReplayWfc _replay;
 
  	public WaveFunction(int width, ImageProcessor processor)
 	{
 		_width = width;
 		_processor = processor;
+
+		_replay = new ReplayWfc(_processor.GetColorLetterMap());
 		
 		InitialiseGrid();
 	}
@@ -61,13 +65,14 @@ public class WaveFunction
 	public void Iterate()
 	{
 		MapTile tile = GetMinimumEntropyTile();
-		// MapTile tile = GetRandomUncollapsedWithTheLowestEntropyOld(); // for experimental purposes once the the whole thing is refactored
 
 		if (tile == null) { return; }
 		
 		tile.Collapse(_processor.GetLetterWeights()); 
 		
 		Propagate(tile);
+		
+		_replay.AddStep(CreateLetterMap());
 	}
 	
 	/**
@@ -98,59 +103,6 @@ public class WaveFunction
 		}
 
 		return selectedTile;
-	}
-	
-	/**
-	 * In the python example, when finding the lowest entropy, they evaluate the entr lt min_entr
-	 * then just save the coords.. basically finding the first tile with the lowest entropy
-	 *
-	 * What mine is doing is to find the lowest entropy value, then all the tiles with that lowest entropy
-	 * then randomly one tile of all of those with the lowest entropy
-	 *
-	 * I'm still curious to see what difference, if any is between the 2 implementations
-	 */
-	public MapTile GetRandomUncollapsedWithTheLowestEntropyOld()
-	{
-		float lowestEntropy = Mathf.Infinity;
-        
-		// find the lowest entropy
-		foreach (MapTile mapTile in _grid)
-		{
-			if (mapTile.IsCollapsed()) { continue; }
-            
-			float tileEntropy = CalculateShannonEntropy(mapTile, _processor.GetLetterWeights());
-            
-			// apply the noise here
-
-			if (tileEntropy < lowestEntropy)
-			{
-				lowestEntropy = tileEntropy;
-			}
-		}
-        
-		List<MapTile> lowestEntropyList = new List<MapTile>();
-    
-		// find all the tiles with the lowest entropy
-		foreach (MapTile mapTile in _grid)
-		{
-			if (mapTile.IsCollapsed()) { continue; }
-            
-			// this tests equality between the 2 floats
-			if (Math.Abs(CalculateShannonEntropy(mapTile, _processor.GetLetterWeights()) - lowestEntropy) < CustomUtils.FloatComparisonTolerance)
-			{
-				lowestEntropyList.Add(mapTile);
-			}
-		}
-        
-		if (lowestEntropyList.Count == 0)
-		{
-			return null;
-		}
-        
-		// fix these names
-		MapTile randomSelectedTileVersionOne = lowestEntropyList[Random.Range(0, lowestEntropyList.Count)];
-
-		return randomSelectedTileVersionOne;
 	}
 	
 	/**
@@ -228,56 +180,37 @@ public class WaveFunction
             }
         }
     }
-    
-	/**
-	 * Create a Color array based on the list of chars
-	 */
-	public Color[] GetColorMap()
-	{
-		char[] letterMap = CreateLetterMap();
-		Color[] colors = new Color[letterMap.Length];
-		
-		// flip the color-letter map
-		Dictionary<char, Color> charColorDictionary = new Dictionary<char, Color>();
-		foreach (KeyValuePair<Color, char> kvp in _processor.GetColorLetterMap())
-		{
-			charColorDictionary[kvp.Value] = kvp.Key;
-		}
-
-		for (int i = 0; i < letterMap.Length; i++)
-		{
-			char c = letterMap[i];
-			if (charColorDictionary.TryGetValue(c, out Color color))
-			{
-				colors[i] = color;
-			}
-			else
-			{
-				// Handle case where char is not found in dictionary
-				colors[i] = Color.black; // Default to black or any other default color
-			}
-		}
-
-		return colors;
-	}
 	
 	/**
-	 * Creates an array of letters with all the collapsed values
-	 *
-	 * NOTE: This assumes that all the tiles it iterates through have been collapsed
+	 * Creates a list of lists of the letters available for each tile
 	 */
-	private char[] CreateLetterMap()
+	private List<List<char>> CreateLetterMap()
 	{
-		char[] letterMap = new char[_width * _width];
+		List<List<char>> letterMap = new List<List<char>>();
 		foreach (MapTile tile in _grid)
 		{
-			letterMap[CustomUtils.GetArrayIndexFromCoords(tile.GetCoords(), _width)] = tile.GetCollapsedValue();
+			List<char> tileLetters = new List<char>();
+			
+			foreach (KeyValuePair<char,bool> superposition in tile.GetSuperpositions())
+			{
+				if (superposition.Value)
+				{
+					tileLetters.Add(superposition.Key);
+				}
+			}
+			
+			letterMap.Add(tileLetters);
 		}
 
 		return letterMap;
 	}
+
+	public ReplayWfc GetReplay()
+	{
+		return _replay;
+	}
     
-	public MapTile[] GetMap()
+	public MapTile[] GetGrid()
 	{
 		return _grid;
 	}
