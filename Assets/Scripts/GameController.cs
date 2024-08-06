@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UI;
 using UnityEngine;
@@ -23,6 +24,7 @@ public class GameController : MonoBehaviour
     public float inputDisplayWidth = 200f;
 
     public int generationStep = 0;
+    public float frameDelay = 0.5f;
     
     // keeping the header here for the replay functionality
     // [Header("Simulation Settings")] 
@@ -67,6 +69,23 @@ public class GameController : MonoBehaviour
     public void DrawGenerationStep()
     {
         DrawTexture(_replay.GetColorMapAtStep(generationStep));
+    }
+
+    public void DrawAnimation()
+    {
+        StartCoroutine(AnimateGeneration());
+    }
+    
+    IEnumerator AnimateGeneration()
+    {
+        for (int i = 0; i < _replay.GetNumberOfIterations(); i++)
+        {
+            generationStep = i;
+            
+            DrawTexture(_replay.GetColorMapAtStep(i));
+            
+            yield return new WaitForSeconds(frameDelay);
+        }
     }
 
     /**

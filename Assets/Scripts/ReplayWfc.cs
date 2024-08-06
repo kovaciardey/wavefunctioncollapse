@@ -48,6 +48,14 @@ public class ReplayWfc
     }
     
     /**
+     * Get the number of iterations for the generation
+     */
+    public int GetNumberOfIterations()
+    {
+        return _colorMaps.Count;
+    }
+    
+    /**
      * Do a Deep Copy of a List<List<char>>
      */
     private List<List<char>> DeepCopyList(List<List<char>> original)
