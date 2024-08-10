@@ -86,6 +86,8 @@ public class ImageProcessor
 		char currentLetter = 'A';
 		int index = 0;
 		
+		// TODO: split the texture into n * n squares
+		
 		foreach (Color color in colors)
 		{
 			// shouldn't really be reached cos the input maps are simple enough
@@ -94,6 +96,11 @@ public class ImageProcessor
 				Debug.LogWarning("Exceeded the number of available letters (A-Z). Some colors won't be assigned a letter.");
 				break;
 			} 
+			
+			// TODO: could it be worth having like a hash to if a tile is unique?
+			// TODO: do I handle rotations?
+			// TODO: do I need to do any checks of like edges and stuff? 
+			// I shouldn't really if I'm processing stuff nicely
 			
 			// create color-letter map
 			if (_colorLetterMap.TryAdd(color, currentLetter))

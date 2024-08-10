@@ -76,6 +76,7 @@ public class GameController : MonoBehaviour
         StartCoroutine(AnimateGeneration());
     }
     
+    //TODO: maybe improve this with the suggestions from CHAT GPT!
     IEnumerator AnimateGeneration()
     {
         for (int i = 0; i < _replay.GetNumberOfIterations(); i++)

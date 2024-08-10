@@ -86,6 +86,7 @@ public class ReplayWfc
         }
         
         // average the colours at each step
+        // TODO: could move this to CustomUtils
         foreach (List<char> letters in letterMap)
         {
             float totalR = 0f;
