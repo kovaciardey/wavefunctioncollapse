@@ -7,6 +7,9 @@ using Random = UnityEngine.Random;
 
 public class WaveFunction
 {
+	// TODO: add ability to instantiate a WfcGenerationData class based on data loaded in from a JSON file. 
+	//	This WfcGenerationData instance should be the one that's used to give all the information necessary to the WFC algorithm
+	
 	private readonly int _width;
 	private readonly ImageProcessorOld _processorOld;
 	

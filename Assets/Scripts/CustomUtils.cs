@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 /**
@@ -61,6 +59,26 @@ public static class CustomUtils
     public static bool IsWithinBounds(int x, int y, int width, int height)
     {
         return x >= 0 && x < width && y >= 0 && y < height;
+    }
+    
+    /**
+     * Converts a colour to its Hex representation
+     */
+    public static string ColorToHex(Color color)
+    {
+        return ColorUtility.ToHtmlStringRGB(color);
+    }
+    
+    /**
+     * TODO: THIS DOES NOT WORK PROPERLY WITH THE UNITY COLOR CLASS
+     * Converts a Hex color to a Unity Color class
+     */
+    public static Color HexToColor(string hex)
+    {
+        int r = Convert.ToInt32(hex.Substring(1, 2), 16);
+        int g = Convert.ToInt32(hex.Substring(3, 2), 16);
+        int b = Convert.ToInt32(hex.Substring(5, 2), 16);
+        return new Color(r, g, b); // full alpha
     }
     
     /********* DEBUG STUFF *********/
