@@ -4,8 +4,15 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-public class ImageProcessor : MonoBehaviour
+public class InputProcessor : MonoBehaviour
 {
+    // TODO: it might ne an idea to also save all the tiles as .png or smth in the folder to
+    //  load them like that for later when increasing the size of N * N
+    //  might even make separate folders for that ech N size. 
+    //  additionally it would probably be good to .gitignore the resources folder so I don't commit these things to git
+    
+    // TODO: for the future also have the ability to to a tiled or overlapping model
+    
     public Texture2D input;
 
     private WfcGenerationData _generationData = new WfcGenerationData();
@@ -16,7 +23,7 @@ public class ImageProcessor : MonoBehaviour
         
         WriteWfcDataToFile(input.name);
         
-        Debug.Log("Processed the Image");
+        Debug.Log("Processed the Input");
     }
     
     private void WriteWfcDataToFile(string fileName)
@@ -25,6 +32,7 @@ public class ImageProcessor : MonoBehaviour
         string folderPath = Path.Combine(Application.dataPath, "Resources");
         string filePath = Path.Combine(folderPath, fileName + ".json");
         
+        // TODO: add the folder with the same name as the input image and put all the data in there
         // Ensure the Resources folder exists
         if (!Directory.Exists(folderPath))
         {

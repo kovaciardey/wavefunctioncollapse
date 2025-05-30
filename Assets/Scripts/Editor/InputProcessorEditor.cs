@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace Editor
 {
-    [CustomEditor(typeof(ImageProcessor))]
-    public class ImageProcessorEditor : UnityEditor.Editor
+    [CustomEditor(typeof(InputProcessor))]
+    public class InputProcessorEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
@@ -12,12 +12,12 @@ namespace Editor
             DrawDefaultInspector();
 
             // Reference to the target script
-            ImageProcessor imageProcessor = (ImageProcessor) target;
+            InputProcessor inputProcessor = (InputProcessor) target;
 
             // Add a button to the Inspector
             if (GUILayout.Button("Process"))
             {
-                imageProcessor.ProcessImage();
+                inputProcessor.ProcessImage();
             }
         }
     }
