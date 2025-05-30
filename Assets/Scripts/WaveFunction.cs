@@ -8,18 +8,18 @@ using Random = UnityEngine.Random;
 public class WaveFunction
 {
 	private readonly int _width;
-	private readonly ImageProcessor _processor;
+	private readonly ImageProcessorOld _processorOld;
 	
 	private MapTile[] _grid;
 	
 	private readonly ReplayWfc _replay;
 
- 	public WaveFunction(int width, ImageProcessor processor)
+ 	public WaveFunction(int width, ImageProcessorOld processorOld)
 	{
 		_width = width;
-		_processor = processor;
+		_processorOld = processorOld;
 
-		_replay = new ReplayWfc(_processor.GetColorLetterMap());
+		_replay = new ReplayWfc(_processorOld.GetColorLetterMap());
 		
 		InitialiseGrid();
 	}
@@ -37,7 +37,7 @@ public class WaveFunction
 			{
 				Vector2Int coords = new Vector2Int(x, y);
 				
-				_grid[CustomUtils.GetArrayIndexFromCoords(coords, _width)] = new MapTile(coords, _processor.GetUniqueLetters());
+				_grid[CustomUtils.GetArrayIndexFromCoords(coords, _width)] = new MapTile(coords, _processorOld.GetUniqueLetters());
 			}
 		}
 	}
@@ -68,7 +68,7 @@ public class WaveFunction
 
 		if (tile == null) { return; }
 		
-		tile.Collapse(_processor.GetLetterWeights()); 
+		tile.Collapse(_processorOld.GetLetterWeights()); 
 		
 		Propagate(tile);
 		
@@ -90,7 +90,7 @@ public class WaveFunction
 				continue;
 			}
 
-			float entropy = CalculateShannonEntropy(mapTile, _processor.GetLetterWeights());
+			float entropy = CalculateShannonEntropy(mapTile, _processorOld.GetLetterWeights());
 			
 			// apply some noise
 			float entropyWithNoise = entropy - Random.Range(0.0f, 1.0f) / 1000;
@@ -165,7 +165,7 @@ public class WaveFunction
                     {
                         Tuple<char, char, string> tempTuple = new Tuple<char, char, string>(tileLetter, otherLetter, CustomUtils.GetDirectionString(direction));
 
-                        pairsAllowed[counter] = _processor.GetPairsList().Contains(tempTuple);
+                        pairsAllowed[counter] = _processorOld.GetPairsList().Contains(tempTuple);
 
                         counter += 1;
                     }

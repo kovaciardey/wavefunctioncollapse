@@ -22,16 +22,20 @@ public class GameController : MonoBehaviour
     
     [Header("Display Settings")] 
     public float inputDisplayWidth = 200f;
-
+    
+    [Header("Animation Settings")]
     public int generationStep = 0;
     public float frameDelay = 0.5f;
     
     // keeping the header here for the replay functionality
     // [Header("Simulation Settings")] 
     
-    private ImageProcessor _processor;
+    private ImageProcessorOld _processorOld;
 
     private ReplayWfc _replay;
+    
+    // TODO: load generation data file and send WfcGenerationData variable to the WaveFunction class
+    // TODO: need to figure out how to say which file to load
     
     void Start()
     {
@@ -49,7 +53,7 @@ public class GameController : MonoBehaviour
     {
         Debug.Log("Started Generation");
 
-        WaveFunction wf = new WaveFunction(width, _processor);
+        WaveFunction wf = new WaveFunction(width, _processorOld);
 
         while (wf.HasUncollapsed())
         {
@@ -135,9 +139,9 @@ public class GameController : MonoBehaviour
      */
     private void DrawTileWeightPanels()
     {
-        int totalPixels = _processor.GetTotalPixels();
-        Dictionary<Color, char> colorLetterMap = _processor.GetColorLetterMap();
-        Dictionary<char, int> letterCounts = _processor.GetLetterCounts();
+        int totalPixels = _processorOld.GetTotalPixels();
+        Dictionary<Color, char> colorLetterMap = _processorOld.GetColorLetterMap();
+        Dictionary<char, int> letterCounts = _processorOld.GetLetterCounts();
 
         int index = 0;
         foreach (KeyValuePair<Color, char> kvp in colorLetterMap)
@@ -164,8 +168,8 @@ public class GameController : MonoBehaviour
      */
     private void ProcessInput()
     {
-        _processor = new ImageProcessor(input);
-        _processor.Process();
+        _processorOld = new ImageProcessorOld(input);
+        _processorOld.Process();
     }
     
     /**
