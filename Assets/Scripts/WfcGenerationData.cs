@@ -20,4 +20,12 @@ public class WfcGenerationData
     // The color is in hex format to make it easier for serialization
     // TODO: this might be replaced to a reference to the tile .png file
     public Dictionary<string, Color> TileMap { get; set; } = new Dictionary<string, Color>();
+
+    
+    // The number of occurrences for each tile hash
+    public Dictionary<string, int> TileCounts { get; set; } = new Dictionary<string, int>();
+
+    
+    // The weight for each tile hash
+    public Dictionary<string, float> TileWeights { get; set; } = new Dictionary<string, float>();
 }

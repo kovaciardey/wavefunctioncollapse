@@ -22,12 +22,19 @@ public class InputProcessor : MonoBehaviour
 
     public int tileSize = 1;
 
+    
+    
     private WfcGenerationData _generationData = new WfcGenerationData();
+
+    private List<string> _tilesAsHashes = new List<string>();
 
     public void ProcessImage()
     {
+        // TODO: this will later be updated to be a list of N by N tiles
         _generationData.TotalPixels = input.GetPixels().Length;
-
+        
+        // get all the pixels, assign a unique hash and create a hash => color map
+        // at the same time make a List with all the tiles represented by their hashes
         foreach (Color color in input.GetPixels())
         {
             // temp making this an array as I'm only working with the single pixels, and the GenerateTileKey expects an array
@@ -36,6 +43,23 @@ public class InputProcessor : MonoBehaviour
             string tileKey = GenerateTileKey(tilePixels);
 
             _generationData.TileMap.TryAdd(tileKey, color);
+            
+            _tilesAsHashes.Add(tileKey);
+        }
+        
+        // count occurrences for each tile
+        foreach (string hash in _tilesAsHashes)
+        {
+            if (!_generationData.TileCounts.TryAdd(hash, 1))
+            {
+                _generationData.TileCounts[hash] += 1;
+            }
+        }
+        
+        // calculate weight for each tile
+        foreach (KeyValuePair<string, int> tileCount in _generationData.TileCounts)
+        {
+            _generationData.TileWeights.Add(tileCount.Key, (float) tileCount.Value / _generationData.TotalPixels);
         }
         
         WriteWfcDataToFile(input.name);

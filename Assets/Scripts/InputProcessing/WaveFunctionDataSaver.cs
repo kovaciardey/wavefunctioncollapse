@@ -17,20 +17,60 @@ public class WaveFunctionDataSaver
     {
         public int totalPixels;
         public List<TileEntry> tileMap = new List<TileEntry>();
-
+        public List<TileCount> tileCounts = new List<TileCount>();
+        public List<TileWeight> tileWeights = new List<TileWeight>();
+        
+        // TODO: perhaps make all these a single TileData class as they all have the same key 
         [System.Serializable]
         public class TileEntry
         {
             public string tileUniqueString;
             public string colorValue;
         }
+        
+        [System.Serializable]
+        public class TileCount
+        {
+            public string tileUniqueString;
+            public int occurrences;
+        }
+        
+        [System.Serializable]
+        public class TileWeight
+        {
+            public string tileUniqueString;
+            public float weight;
+        }
 
         public WfcDataWrapper(WfcGenerationData data)
         {
             totalPixels = data.TotalPixels;
+            
             foreach (KeyValuePair<string, Color> kvp in data.TileMap)
             {
-                tileMap.Add(new TileEntry { tileUniqueString = kvp.Key, colorValue = CustomUtils.ColorToHex(kvp.Value) });
+                tileMap.Add(new TileEntry
+                {
+                    tileUniqueString = kvp.Key, 
+                    colorValue = CustomUtils.ColorToHex(kvp.Value)
+                });
+            }
+
+            foreach (KeyValuePair<string, int> kvp in data.TileCounts)
+            {
+                tileCounts.Add(new TileCount
+                {
+                    tileUniqueString = kvp.Key,
+                    occurrences = kvp.Value
+                });
+            }
+
+            foreach (KeyValuePair<string, float> kvp in data.TileWeights)
+            {
+                tileWeights.Add(new TileWeight
+                {
+                    tileUniqueString = kvp.Key,
+                    weight = kvp.Value
+                });   
             }
         }
     }
