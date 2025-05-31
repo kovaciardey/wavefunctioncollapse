@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -16,9 +17,12 @@ public class WaveFunctionDataSaver
     private class WfcDataWrapper
     {
         public int totalPixels;
+        public List<string> tileHashes = new List<string>();
         public List<TileEntry> tileMap = new List<TileEntry>();
         public List<TileCount> tileCounts = new List<TileCount>();
         public List<TileWeight> tileWeights = new List<TileWeight>();
+        public List<TileNeighbor> tileNeighbors = new List<TileNeighbor>();
+        public List<TileNeighborAlternate> tileNeighborsAlternate = new List<TileNeighborAlternate>();
         
         // TODO: perhaps make all these a single TileData class as they all have the same key 
         [System.Serializable]
@@ -41,10 +45,37 @@ public class WaveFunctionDataSaver
             public string tileUniqueString;
             public float weight;
         }
+        
+        [System.Serializable]
+        public class TileNeighbor
+        {
+            public string tileUniqueString;
+            public string neighborUniqueString;
+            public string direction;
+        }
+        
+        [System.Serializable]
+        public class TileDirectionNeighbors
+        {
+            public string direction;
+            public List<string> neighbors;
+        }
+        
+        [System.Serializable]
+        public class TileNeighborAlternate
+        {
+            public string tileUniqueString;
+            public List<TileDirectionNeighbors> directionNeighborsList;
+        }
 
         public WfcDataWrapper(WfcGenerationData data)
         {
             totalPixels = data.TotalPixels;
+
+            foreach (string tileHash in data.TileHashes)
+            {
+                tileHashes.Add(tileHash);
+            }
             
             foreach (KeyValuePair<string, Color> kvp in data.TileMap)
             {
@@ -71,6 +102,38 @@ public class WaveFunctionDataSaver
                     tileUniqueString = kvp.Key,
                     weight = kvp.Value
                 });   
+            }
+
+            foreach (Tuple<string,string,string> pair in data.TileNeighbors)
+            {
+                tileNeighbors.Add(new TileNeighbor
+                {
+                    tileUniqueString = pair.Item1,
+                    neighborUniqueString = pair.Item2,
+                    direction = pair.Item3
+                });
+            }
+
+            foreach (KeyValuePair<string, Dictionary<string, List<string>>> kvp in data.TileNeighborsAlternate)
+            {
+                TileNeighborAlternate tileNeighborAlt = new TileNeighborAlternate
+                {
+                    tileUniqueString = kvp.Key,
+                    directionNeighborsList = new List<TileDirectionNeighbors>()
+                };
+
+                foreach (KeyValuePair<string,List<string>> variable in kvp.Value)
+                {
+                    TileDirectionNeighbors tileDirectionNeighbors = new TileDirectionNeighbors
+                    {
+                        direction = variable.Key,
+                        neighbors = variable.Value
+                    };
+                    
+                    tileNeighborAlt.directionNeighborsList.Add(tileDirectionNeighbors);
+                }
+                
+                tileNeighborsAlternate.Add(tileNeighborAlt);
             }
         }
     }

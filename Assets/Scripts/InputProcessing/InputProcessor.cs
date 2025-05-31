@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using UnityEngine;
@@ -45,6 +46,8 @@ public class InputProcessor : MonoBehaviour
             _generationData.TileMap.TryAdd(tileKey, color);
             
             _tilesAsHashes.Add(tileKey);
+
+            _generationData.TileHashes.Add(tileKey);
         }
         
         // count occurrences for each tile
@@ -61,6 +64,10 @@ public class InputProcessor : MonoBehaviour
         {
             _generationData.TileWeights.Add(tileCount.Key, (float) tileCount.Value / _generationData.TotalPixels);
         }
+        
+        CalculateOrthogonalPairs();
+
+        CalculateAllowedNeighbors();
         
         WriteWfcDataToFile(input.name);
         
@@ -105,7 +112,73 @@ public class InputProcessor : MonoBehaviour
             return System.BitConverter.ToString(hash).Replace("-", "");
         }
     }
-    
+
+    /**
+     * Calculates the set of 3-tuples for the input image
+     */
+    private void CalculateOrthogonalPairs()
+    {
+        int width = input.width;
+        int height = input.height;
+        
+        // iterates through the input starting from the bottom-left corner
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                string tileHash = _tilesAsHashes[CustomUtils.GetArrayIndexFromCoords(x, y, width)];
+
+                foreach (Vector2Int direction in CustomUtils.Directions)
+                {
+                    int neighborX = x + direction.x;
+                    int neighborY = y + direction.y;
+                    
+                    if (!CustomUtils.IsWithinBounds(neighborX, neighborY, width, height))
+                    {
+                        continue;
+                    }
+                    
+                    string neighborHash = _tilesAsHashes[CustomUtils.GetArrayIndexFromCoords(neighborX, neighborY, width)];
+                    string directionName = CustomUtils.GetDirectionString(direction);
+                    
+                    Tuple<string, string, string> tileHashPair = new Tuple<string, string, string>(tileHash, neighborHash, directionName);
+
+                    _generationData.TileNeighbors.Add(tileHashPair);
+                }
+            }
+        }
+    }
+
+    /**
+     * An alternative way of displaying the possible neighbors for a tile
+     * By using a list of tiles for each direction instead of the list of 3-tuples
+     *
+     * This uses the Set of 3-tuples to create the data structure 
+     *
+     * Not currently used but thought I would add for the future
+     * Might be useful at some point to have the neighbors represented like this
+     */
+    private void CalculateAllowedNeighbors()
+    {   
+        // initialise the dictionary:
+        // add each tileHash, and for each hash create the direction dict with an empty list
+        foreach (string tileHash in _generationData.TileHashes)
+        {
+            Dictionary<string, List<string>> directionNeighbors = new Dictionary<string, List<string>>();
+            
+            foreach (Vector2Int direction in CustomUtils.Directions)
+            {
+                directionNeighbors.Add(CustomUtils.GetDirectionString(direction), new List<string>());
+            }
+            
+            _generationData.TileNeighborsAlternate.Add(tileHash, directionNeighbors);
+        }
+        
+        foreach (Tuple<string,string,string> pair in _generationData.TileNeighbors)
+        {
+            _generationData.TileNeighborsAlternate[pair.Item1][pair.Item3].Add(pair.Item2);
+        }
+    }
     
     private void WriteWfcDataToFile(string fileName)
     {
