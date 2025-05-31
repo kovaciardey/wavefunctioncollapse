@@ -5,6 +5,9 @@ using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+/**
+ * The Wave Function Collapse algorithm
+ */
 public class WaveFunction
 {
 	// TODO: add ability to instantiate a WfcGenerationData class based on data loaded in from a JSON file. 

@@ -2,6 +2,10 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using UnityEngine;
 
+/**
+ * Script to process an input image for WFC. Does all the required pre-processing such as splitting into tiles,
+ * calculating weights and neighbors. Saves this data to a JSON file.
+ */
 public class InputProcessor : MonoBehaviour
 {
     // TODO: it might ne an idea to also save all the tiles as .png or smth in the folder to
@@ -9,14 +13,14 @@ public class InputProcessor : MonoBehaviour
     //  might even make separate folders for that ech N size. 
     //  additionally it would probably be good to .gitignore the resources folder so I don't commit these things to git
     
-    // TODO: for the future also have the ability to to a tiled or overlapping model#
+    // TODO: for the future also have the ability to do a tiled or overlapping model
     
     // TODO: for later have the option to select all the available images from a dropdown?
     //  maybe this would be good to have inside of the program rather than the editor
     
     public Texture2D input;
 
-    public int tileSize;
+    public int tileSize = 1;
 
     private WfcGenerationData _generationData = new WfcGenerationData();
 
@@ -81,8 +85,6 @@ public class InputProcessor : MonoBehaviour
     
     private void WriteWfcDataToFile(string fileName)
     {
-        WaveFunctionDataSaver dataSaver = new WaveFunctionDataSaver();
-        
-        dataSaver.SaveToJson(_generationData, fileName);
+        WaveFunctionDataSaver.SaveToJson(_generationData, fileName);
     }
 }
