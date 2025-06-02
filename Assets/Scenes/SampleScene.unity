@@ -424,7 +424,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14b9c3f51a0c3b142af561ad20f1d4ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  input: {fileID: 2800000, guid: 778ca14b75ac70f4ebe51d9cc38c8950, type: 3}
+  input: {fileID: 2800000, guid: 382f7643b949532479bdaf09a27c4e40, type: 3}
   tileSize: 1
 --- !u!1 &705507993
 GameObject:
@@ -564,7 +564,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1672b84fb520b684b8481c30932c8b4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  input: {fileID: 2800000, guid: be15876203101da47ad273506c98cf10, type: 3}
+  input: {fileID: 2800000, guid: 382f7643b949532479bdaf09a27c4e40, type: 3}
   width: 25
   inputDisplay: {fileID: 134526413}
   outputDisplay: {fileID: 1737845382}

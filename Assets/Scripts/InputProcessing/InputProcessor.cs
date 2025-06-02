@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using UnityEngine;
 
+
+// TODO: this script is being executed from the Unity editor not at runtime.
+// Need to do some better reinitialization of the WfcGenerationData Instance and the data saver class to ensure
+// they are always empty when processing an input, as sometimes there are clashes with the data and the counts seem to be off
+
 /**
  * Script to process an input image for WFC. Does all the required pre-processing such as splitting into tiles,
  * calculating weights and neighbors. Saves this data to a JSON file.
@@ -25,12 +30,16 @@ public class InputProcessor : MonoBehaviour
 
     
     
-    private WfcGenerationData _generationData = new WfcGenerationData();
+    private WfcGenerationData _generationData;
 
-    private List<string> _tilesAsHashes = new List<string>();
+    private List<string> _tilesAsHashes;
 
     public void ProcessImage()
     {
+        // TODO: refactor some bits here. use the object notation and have functions to set all the bits below?
+        _generationData = new WfcGenerationData();
+        _tilesAsHashes = new List<string>();
+        
         // TODO: this will later be updated to be a list of N by N tiles
         _generationData.TotalPixels = input.GetPixels().Length;
         
@@ -97,7 +106,7 @@ public class InputProcessor : MonoBehaviour
         {
             for (int x = 0; x < tileSize; x++)
             {
-                // implicit conversion of Color to Color32 (stores R G B as bytes rather than float)
+                // implicit conversion of Unity Color to Color32 (stores R G B as bytes rather than float)
                 Color32 color = tilePixels[CustomUtils.GetArrayIndexFromCoords(x, y, tileSize)];
                 
                 data.Add(color.r);

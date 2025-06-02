@@ -19,9 +19,9 @@ public class WfcGenerationData
 
     
     // a Set of all the unique tile hashes
-    public HashSet<string> TileHashes = new HashSet<string>();
-    
-    
+    public HashSet<string> TileHashes { get; set; } = new HashSet<string>();
+
+
     // Map the unique tile identifier (and MD5 Hash) to the color it represents
     // The color is in hex format to make it easier for serialization
     // TODO: this might be replaced to a reference to the tile .png file
@@ -49,7 +49,7 @@ public class WfcGenerationData
     
     // An alternate way saving the neighbors for the tiles
     // where a list of allowed neighbor hashes is saved for each direction for each tile
-    // The generation currently uses the above data structure, but this is calculate just to have
+    // The generation currently uses the above data structure, but this is calculated just to have
     // It might be useful for the display of the processed input data
     public Dictionary<string, Dictionary<string, List<string>>> TileNeighborsAlternate { get; set; } =
         new Dictionary<string, Dictionary<string, List<string>>>();
