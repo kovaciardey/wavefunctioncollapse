@@ -10,11 +10,10 @@ using Random = UnityEngine.Random;
  */
 public class WaveFunction
 {
-	// TODO: add ability to instantiate a WfcGenerationData class based on data loaded in from a JSON file. 
-	//	This WfcGenerationData instance should be the one that's used to give all the information necessary to the WFC algorithm
-	
 	private readonly int _width;
 	private readonly ImageProcessorOld _processorOld;
+
+	private readonly WfcGenerationData _waveFunctionData;
 	
 	private MapTile[] _grid;
 	
@@ -28,6 +27,17 @@ public class WaveFunction
 		_replay = new ReplayWfc(_processorOld.GetColorLetterMap());
 		
 		InitialiseGrid();
+	}
+
+	public WaveFunction(int width, WfcGenerationData waveFunctionData)
+	{
+		_width = width;
+		_waveFunctionData = waveFunctionData;
+
+		// _replay = new ReplayWfc(_processorOld.GetColorLetterMap());
+
+		Debug.Log("Created the WaveFunction instance from the WfcGenerationData");
+		// InitialiseGrid();
 	}
     
 	/**
@@ -99,6 +109,7 @@ public class WaveFunction
 			float entropy = CalculateShannonEntropy(mapTile, _processorOld.GetLetterWeights());
 			
 			// apply some noise
+			// TODO: have the noise be a slider to play around with different values
 			float entropyWithNoise = entropy - Random.Range(0.0f, 1.0f) / 1000;
 			
 			if (entropyWithNoise < minEntropy)
@@ -169,8 +180,9 @@ public class WaveFunction
 	                int counter = 0;
                     foreach (char tileLetter in currentTile.GetAllowedLetters())
                     {
+	                    
                         Tuple<char, char, string> tempTuple = new Tuple<char, char, string>(tileLetter, otherLetter, CustomUtils.GetDirectionString(direction));
-
+                        
                         pairsAllowed[counter] = _processorOld.GetPairsList().Contains(tempTuple);
 
                         counter += 1;

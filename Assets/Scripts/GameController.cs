@@ -34,16 +34,14 @@ public class GameController : MonoBehaviour
 
     private ReplayWfc _replay;
     
-    // TODO: load generation data file and send WfcGenerationData variable to the WaveFunction class
-    // TODO: need to figure out how to say which file to load
-    
     void Start()
     {
-        DrawInputPanel();
+        // TODO: restore these
+        // DrawInputPanel();
         
-        ProcessInput();
+        // ProcessInput();
 
-        DrawTileWeightPanels();
+        // DrawTileWeightPanels();
     }
     
     /**
@@ -52,8 +50,16 @@ public class GameController : MonoBehaviour
     public void Generate()
     {
         Debug.Log("Started Generation");
-
-        WaveFunction wf = new WaveFunction(width, _processorOld);
+        
+        Debug.Log("File name" + input.name);
+        
+        // TODO: some better checks if the name cannot be found
+        WfcGenerationData waveFunctionData = WaveFunctionDataSaver.LoadFromJson(input.name);
+        
+        WaveFunction wf = new WaveFunction(width, waveFunctionData);
+        
+        // TODO: break execution here until the WaveFunction class is refactored
+        return;
 
         while (wf.HasUncollapsed())
         {

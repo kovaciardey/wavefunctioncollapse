@@ -70,15 +70,35 @@ public static class CustomUtils
     }
     
     /**
-     * TODO: THIS DOES NOT WORK PROPERLY WITH THE UNITY COLOR CLASS
      * Converts a Hex color to a Unity Color class
      */
     public static Color HexToColor(string hex)
     {
-        int r = Convert.ToInt32(hex.Substring(1, 2), 16);
-        int g = Convert.ToInt32(hex.Substring(3, 2), 16);
-        int b = Convert.ToInt32(hex.Substring(5, 2), 16);
-        return new Color(r, g, b); // full alpha
+        if (string.IsNullOrEmpty(hex))
+        {
+            Debug.LogError("Hex string is null or empty.");
+            return Color.magenta; // Fallback color
+        }
+
+        if (hex.Length != 6)
+        {
+            Debug.LogError("Hex string must be exactly 6 characters long (RRGGBB).");
+            return Color.magenta;
+        }
+        
+        try
+        {
+            float r = int.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber) / 255f;
+            float g = int.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber) / 255f;
+            float b = int.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber) / 255f;
+
+            return new Color(r, g, b);
+        }
+        catch
+        {
+            Debug.LogError($"Invalid hex string: {hex}");
+            return Color.magenta;
+        }
     }
     
     /********* DEBUG STUFF *********/

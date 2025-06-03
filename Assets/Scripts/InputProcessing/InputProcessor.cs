@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using UnityEngine;
 
-
-// TODO: this script is being executed from the Unity editor not at runtime.
-// Need to do some better reinitialization of the WfcGenerationData Instance and the data saver class to ensure
-// they are always empty when processing an input, as sometimes there are clashes with the data and the counts seem to be off
-
 /**
  * Script to process an input image for WFC. Does all the required pre-processing such as splitting into tiles,
  * calculating weights and neighbors. Saves this data to a JSON file.
@@ -21,7 +16,7 @@ public class InputProcessor : MonoBehaviour
     
     // TODO: for the future also have the ability to do a tiled or overlapping model
     
-    // TODO: for later have the option to select all the available images from a dropdown?
+    // TODO: for later have the option to select all the available input images from a dropdown?
     //  maybe this would be good to have inside of the program rather than the editor
     
     public Texture2D input;
@@ -31,7 +26,8 @@ public class InputProcessor : MonoBehaviour
     
     
     private WfcGenerationData _generationData;
-
+    
+    // the input image as a list of string hashes to represent each pixel
     private List<string> _tilesAsHashes;
 
     public void ProcessImage()
@@ -77,7 +73,7 @@ public class InputProcessor : MonoBehaviour
         CalculateOrthogonalPairs();
 
         CalculateAllowedNeighbors();
-        
+
         WriteWfcDataToFile(input.name);
         
         Debug.Log("Processed the Input");
@@ -164,7 +160,7 @@ public class InputProcessor : MonoBehaviour
      *
      * This uses the Set of 3-tuples to create the data structure 
      *
-     * Not currently used but thought I would add for the future
+     * Not used for the generation but thought I would add for the future
      * Might be useful at some point to have the neighbors represented like this
      */
     private void CalculateAllowedNeighbors()

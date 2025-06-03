@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -103,11 +104,10 @@ public class WaveFunctionDataSaver
         File.WriteAllText(path, json);
         Debug.Log("Saved JSON to: " + path);
     }
-    
+
     /**
      * Load a JSON file and create and return a WfcGenerationData instance
      */
-    // TODO: this is just here for later. it is not being used at the moment
     public static WfcGenerationData LoadFromJson(string fileName)
     {
         TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
@@ -117,19 +117,41 @@ public class WaveFunctionDataSaver
             return null;
         }
         
-        // TODO: Would be good to have a separate function for translating each object back into the appropriate WfcDataGeneration object
+        Debug.Log(jsonFile.text);
+
         WfcDataWrapper wrapper = JsonUtility.FromJson<WfcDataWrapper>(jsonFile.text);
         var data = new WfcGenerationData
         {
             TotalPixels = wrapper.totalPixels,
-            TileMap = new Dictionary<string, Color>()
+            TileHashes = new HashSet<string>(),
+            TileMap = new Dictionary<string, Color>(),
+            TileCounts = new Dictionary<string, int>(),
+            TileWeights = new Dictionary<string, float>(),
+            TileNeighbors = new HashSet<Tuple<string, string, string>>(),
+            // TODO: skipping the alternate neighbours data structure for now
         };
+        
+        // Create the TileHashes hashset and the dictionaries
+        foreach (string entry in wrapper.tileHashes)
+        {
+            data.TileHashes.Add(entry);
+            
+            Debug.Log(entry);
+            Debug.Log(wrapper.tileDataList.Count);
 
-        // foreach (var entry in wrapper.tileMap)
-        // {
-            // TODO: call the utils function to convert the hex string back into a color class
-            // data.TileMap[entry.tileUniqueString] = entry.colorValue;
-        // }
+            // In theory this should always return a value, but I could do some better null checking
+            WfcDataWrapper.TileData tileData = wrapper.tileDataList.First(tile => tile.hash == entry);
+
+            data.TileMap.Add(entry, CustomUtils.HexToColor(tileData.colorValue));
+            data.TileCounts.Add(entry, tileData.occurrences);
+            data.TileWeights.Add(entry, tileData.weight);
+        }
+        
+        // Create the 3-Tuple hashset
+        foreach (WfcDataWrapper.TilePair pair in wrapper.tilePairs)
+        {
+            data.TileNeighbors.Add(new Tuple<string, string, string>(pair.tile, pair.neighbor, pair.direction));
+        }
 
         return data;
     }
