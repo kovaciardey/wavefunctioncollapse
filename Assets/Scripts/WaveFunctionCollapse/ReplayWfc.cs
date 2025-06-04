@@ -1,20 +1,25 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// TODO: would it be an idea to save these as a JSON as well?
 public class ReplayWfc
 {
-
-    private readonly Dictionary<int, List<List<char>>> _generationSteps;
+    
+    // stores the state of the grid at each generation step using a list of all the possible hashes for each step
+    private readonly Dictionary<int, List<List<string>>> _generationSteps;
+    
+    // stores the state of the grid at each generation step represented by a list of Colors (1-d arrays representing the texture)
     private readonly Dictionary<int, Color[]> _colorMaps;
 
-    private readonly Dictionary<Color, char> _colorLetterMap;
+    private readonly Dictionary<string, Color> _tileHashMap;
 
-    public ReplayWfc(Dictionary<Color, char> colorLetterMap)
+    public ReplayWfc(Dictionary<string, Color> tileHashMap)
     {
-        _colorLetterMap = colorLetterMap;
+        _tileHashMap = tileHashMap;
         
-        _generationSteps = new Dictionary<int, List<List<char>>>();
+        _generationSteps = new Dictionary<int, List<List<string>>>();
         _colorMaps = new Dictionary<int, Color[]>();
     }
     
@@ -22,9 +27,9 @@ public class ReplayWfc
      * Adds a copy of the state of the grid
      * Creates the color map as well for that same step
      */
-    public void AddStep(List<List<char>> gridMap)
+    public void AddStep(List<List<string>> gridMap)
     {
-        List<List<char>> letterMap = DeepCopyList(gridMap);
+        List<List<string>> letterMap = DeepCopyList(gridMap);
         
         _generationSteps.Add(_generationSteps.Count, letterMap);
         
@@ -40,7 +45,7 @@ public class ReplayWfc
     }
     
     /**
-     * Returns the lat step of the generation aka the result
+     * Returns the last step of the generation aka the result
      */
     public Color[] GetResult()
     {
@@ -56,15 +61,15 @@ public class ReplayWfc
     }
     
     /**
-     * Do a Deep Copy of a List<List<char>>
+     * Do a Deep Copy of a List<List<string>>
      */
-    private List<List<char>> DeepCopyList(List<List<char>> original)
+    private List<List<string>> DeepCopyList(List<List<string>> original)
     {
-        List<List<char>> copy = new List<List<char>>();
+        List<List<string>> copy = new List<List<string>>();
 
-        foreach (List<char> sublist in original)
+        foreach (List<string> sublist in original)
         {
-            List<char> sublistCopy = new List<char>(sublist);
+            List<string> sublistCopy = new List<string>(sublist);
             copy.Add(sublistCopy);
         }
 
@@ -74,32 +79,25 @@ public class ReplayWfc
     /**
      * Create a color array from the letters
      */
-    private Color[] CreateColorMap(List<List<char>> letterMap)
+    private Color[] CreateColorMap(List<List<string>> tileHashMap)
     {
         List<Color> colors = new List<Color>();
         
-        // flip the color-letter map
-        Dictionary<char, Color> charColorDictionary = new Dictionary<char, Color>();
-        foreach (KeyValuePair<Color, char> kvp in _colorLetterMap)
-        {
-            charColorDictionary[kvp.Value] = kvp.Key;
-        }
-        
-        // average the colours at each step
+        // average the colours of the pixels at each step
         // TODO: could move this to CustomUtils
-        foreach (List<char> letters in letterMap)
+        foreach (List<string> tileHashList in tileHashMap)
         {
             float totalR = 0f;
             float totalG = 0f;
             float totalB = 0f;
             
-            int count = letters.Count;
+            int count = tileHashList.Count;
             
-            foreach (char letter in letters)
+            foreach (string tileHash in tileHashList)
             {
-                totalR += charColorDictionary[letter].r;
-                totalG += charColorDictionary[letter].g;
-                totalB += charColorDictionary[letter].b;
+                totalR += _tileHashMap[tileHash].r;
+                totalG += _tileHashMap[tileHash].g;
+                totalB += _tileHashMap[tileHash].b;
             }
             
             float avgR = totalR / count;

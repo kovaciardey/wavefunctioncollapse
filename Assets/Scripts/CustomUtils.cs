@@ -101,6 +101,14 @@ public static class CustomUtils
         }
     }
     
+    // /**
+    //  * Takes a list of colors and calculates an average color
+    //  */
+    // public static Color CalculateAverageColor()
+    // {
+    //     
+    // }
+    
     /********* DEBUG STUFF *********/
     
     /**

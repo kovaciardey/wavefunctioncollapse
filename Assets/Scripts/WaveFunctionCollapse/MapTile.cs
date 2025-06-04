@@ -5,47 +5,44 @@ using UnityEngine;
 public class MapTile
 {
 	private readonly Vector2Int _coords;
-	
-	// contains a list of all the possible types and a boolean if the type is possible or not
-	public Dictionary<Color, bool> TileSuperpositions { get; set; }
 
-	private Dictionary<char, bool> _letterSuperpositions;
+	private Dictionary<string, bool> _tileSuperpositions;
 
 	private bool _isCollapsed;
 
-	public MapTile(Vector2Int coords, char[] letters)
+	public MapTile(Vector2Int coords, HashSet<string> tileHashes)
 	{
 		_coords = coords;
 
-		InitializeSuperpositions(letters);
+		InitializeSuperpositions(tileHashes);
 	}
 	
 	/**
 	 * Initialize the dictionary of superpositions setting all to true
 	 */
-	private void InitializeSuperpositions(char[] letters)
+	private void InitializeSuperpositions(HashSet<string> tileHashes)
 	{
-		_letterSuperpositions = new Dictionary<char, bool>();
-		foreach (char letter in letters)
+		_tileSuperpositions = new Dictionary<string, bool>();
+		foreach (string tileHash in tileHashes)
 		{
-			// initialize all possible positions to true
-			_letterSuperpositions.Add(letter, true);
+			_tileSuperpositions.Add(tileHash, true);
 		}
 	}
 	
 	/**
 	 * Collapse the tile. This selects randomly a tile from the available tiles based on the weight
 	 */
-	public void Collapse(Dictionary<char, float> weights)
+	// TODO: I might have to to do a better way of handling the weights rather than floats to get rid of any possibility of rounding errors
+	public void Collapse(Dictionary<string, float> weights)
 	{
 		_isCollapsed = true;
 		
 		// Calculate the total weight
 		// this will always be 1 tbf..
 		float totalWeight = 0f;
-		foreach (KeyValuePair<char, float> weight in weights)
+		foreach (KeyValuePair<string, float> weight in weights)
 		{
-			if (_letterSuperpositions[weight.Key])
+			if (_tileSuperpositions[weight.Key])
 			{
 				totalWeight += weight.Value;
 			}
@@ -53,34 +50,34 @@ public class MapTile
 		
 		float randomValue = Random.Range(0f, totalWeight);
 		
-		// Iterate through the colors and select one based on weights
+		// Iterate through the tiles and select one based on weights
 		float cumulativeWeight = 0f;
-		char selectedLetter = 'A';
-		foreach (KeyValuePair<char, float> weight in weights)
+		string selectedTileHash = "";
+		foreach (KeyValuePair<string, float> weight in weights)
 		{
-			// if letter superposition is true
-			if (_letterSuperpositions[weight.Key])
+			// if tileHash superposition is true
+			if (_tileSuperpositions[weight.Key])
 			{
 				cumulativeWeight += weight.Value;
 				if (randomValue <= cumulativeWeight)
 				{
-					selectedLetter = weight.Key;
+					selectedTileHash = weight.Key;
 					break;
 				}
 			}
 		}
 		
 		// Set tile to true and rest to false
-		List<char> keys = new List<char>(_letterSuperpositions.Keys);
-		foreach (char letter in keys)
+		List<string> keys = new List<string>(_tileSuperpositions.Keys);
+		foreach (string tileHash in keys)
 		{
-			if (letter == selectedLetter)
+			if (tileHash == selectedTileHash)
 			{
-				_letterSuperpositions[letter] = true;
+				_tileSuperpositions[tileHash] = true;
 			}
 			else
 			{
-				_letterSuperpositions[letter] = false;
+				_tileSuperpositions[tileHash] = false;
 			}
 		}
 	}
@@ -88,45 +85,46 @@ public class MapTile
 	/**
 	 * Returns a list of all the possible letters that the tile can still collapse into
 	 */
-	public List<char> GetAllowedLetters()
+	public List<string> GetAllowedLetters()
 	{
-		List<char> letters = new List<char>();
+		List<string> allowedTiles = new List<string>();
 
-		foreach (KeyValuePair<char,bool> pair in _letterSuperpositions)
+		foreach (KeyValuePair<string,bool> pair in _tileSuperpositions)
 		{
 			if (pair.Value)
 			{
-				letters.Add(pair.Key);
+				allowedTiles.Add(pair.Key);
 			}
 		}
 
-		return letters;
+		return allowedTiles;
 	}
 	
 	/**
 	 * Update a letter super position with the given value
 	 */
-	public void UpdateSuperposition(char letter, bool value)
+	public void UpdateSuperposition(string tileHash, bool value)
 	{
-		_letterSuperpositions[letter] = value;
+		_tileSuperpositions[tileHash] = value;
 	}
 	
 	/**
-	 * Returns the letter after the tile has been collapsed
+	 * Returns the tileHash after the tile has been collapsed
 	 *
 	 * NOTE: This assumes the tile has already been collapsed
 	 */
-	public char GetCollapsedValue()
+	// TODO: is this still needed?
+	public string GetCollapsedValue()
 	{
-		foreach (KeyValuePair<char,bool> letterSuperpos in _letterSuperpositions)
+		foreach (KeyValuePair<string, bool> tileSuperpos in _tileSuperpositions)
 		{
-			if (letterSuperpos.Value)
+			if (tileSuperpos.Value)
 			{
-				return letterSuperpos.Key;
+				return tileSuperpos.Key;
 			}
 		}
 
-		return 'A'; // default response. should never be reached
+		return "string"; // default response. should never be reached
 	}
 	
 	public bool IsCollapsed()
@@ -134,9 +132,9 @@ public class MapTile
 		return _isCollapsed;
 	}
 	
-	public Dictionary<char, bool> GetSuperpositions()
+	public Dictionary<string, bool> GetSuperpositions()
 	{
-		return _letterSuperpositions;
+		return _tileSuperpositions;
 	}
 	
 	public Vector2Int GetCoords()
@@ -146,13 +144,13 @@ public class MapTile
 	
 	public override string ToString()
 	{
-		string letterSuperpos = "";
+		string tileSuperpos = "";
 
-		foreach (KeyValuePair<char,bool> letter in _letterSuperpositions)
+		foreach (KeyValuePair<string,bool> tileSuperposition in _tileSuperpositions)
 		{
-			letterSuperpos += letter.Key + " " + letter.Value + "; ";
+			tileSuperpos += tileSuperposition.Key + " " + tileSuperposition.Value + "; ";
 		}
 		
-		return _coords + " " + letterSuperpos + " IsCollapsed: " + _isCollapsed;
+		return _coords + " " + tileSuperpos + " IsCollapsed: " + _isCollapsed;
 	}
 }
