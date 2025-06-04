@@ -5,31 +5,37 @@ using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+/**
+ * The Wave Function Collapse algorithm
+ */
+// TODO: refactor this to allow for width * height outputs, not just square 
 public class WaveFunction
 {
 	private readonly int _width;
-	private readonly ImageProcessor _processor;
+	private readonly ImageProcessorOld _processorOld;
+
+	private readonly WfcGenerationData _waveFunctionData;
 	
 	private MapTile[] _grid;
 	
 	private readonly ReplayWfc _replay;
 
- 	public WaveFunction(int width, ImageProcessor processor)
+	public WaveFunction(int width, WfcGenerationData waveFunctionData)
 	{
 		_width = width;
-		_processor = processor;
-
-		_replay = new ReplayWfc(_processor.GetColorLetterMap());
+		_waveFunctionData = waveFunctionData;
 		
+		_replay = new ReplayWfc(_waveFunctionData.TileMap);
+
+		Debug.Log("Created the WaveFunction instance from the WfcGenerationData");
 		InitialiseGrid();
 	}
     
 	/**
-	 * Initialise the _grid new instances of MapTile for each coord
+	 * Initialise the _grid with new instances of MapTile for each coord
 	 */
 	private void InitialiseGrid()
 	{
-		// initialise the output map
 		_grid = new MapTile[_width * _width];
 		for (int y = 0; y < _width; y += 1)
 		{
@@ -37,7 +43,7 @@ public class WaveFunction
 			{
 				Vector2Int coords = new Vector2Int(x, y);
 				
-				_grid[CustomUtils.GetArrayIndexFromCoords(coords, _width)] = new MapTile(coords, _processor.GetUniqueLetters());
+				_grid[CustomUtils.GetArrayIndexFromCoords(coords, _width)] = new MapTile(coords, _waveFunctionData.TileHashes);
 			}
 		}
 	}
@@ -68,7 +74,7 @@ public class WaveFunction
 
 		if (tile == null) { return; }
 		
-		tile.Collapse(_processor.GetLetterWeights()); 
+		tile.Collapse(_waveFunctionData.TileWeights); 
 		
 		Propagate(tile);
 		
@@ -90,9 +96,10 @@ public class WaveFunction
 				continue;
 			}
 
-			float entropy = CalculateShannonEntropy(mapTile, _processor.GetLetterWeights());
+			float entropy = CalculateShannonEntropy(mapTile, _waveFunctionData.TileWeights);
 			
 			// apply some noise
+			// TODO: have the noise be a slider to play around with different values
 			float entropyWithNoise = entropy - Random.Range(0.0f, 1.0f) / 1000;
 			
 			if (entropyWithNoise < minEntropy)
@@ -108,12 +115,12 @@ public class WaveFunction
 	/**
 	 * Calculates the Shannon entropy for a specific tile
 	 */
-	private float CalculateShannonEntropy(MapTile tile, Dictionary<char, float> weights)
+	private float CalculateShannonEntropy(MapTile tile, Dictionary<string, float> weights)
 	{
 		float sumOfWeights = 0;
 		float sumOfWeightLogWeights = 0;
 
-		foreach (KeyValuePair<char,bool> pair in tile.GetSuperpositions())
+		foreach (KeyValuePair<string,bool> pair in tile.GetSuperpositions())
 		{
 			if (pair.Value)
 			{
@@ -155,17 +162,18 @@ public class WaveFunction
                     continue;
                 }
                 
-                foreach (char otherLetter in neighborTile.GetAllowedLetters())
+                foreach (string otherTileHash in neighborTile.GetAllowedLetters())
                 {
 	                // create bool array
 	                bool[] pairsAllowed = new bool[currentTile.GetAllowedLetters().Count];
 
 	                int counter = 0;
-                    foreach (char tileLetter in currentTile.GetAllowedLetters())
+                    foreach (string tileHash in currentTile.GetAllowedLetters())
                     {
-                        Tuple<char, char, string> tempTuple = new Tuple<char, char, string>(tileLetter, otherLetter, CustomUtils.GetDirectionString(direction));
-
-                        pairsAllowed[counter] = _processor.GetPairsList().Contains(tempTuple);
+	                    
+                        Tuple<string, string, string> tempTuple = new Tuple<string, string, string>(tileHash, otherTileHash, CustomUtils.GetDirectionString(direction));
+                        
+                        pairsAllowed[counter] = _waveFunctionData.TileNeighbors.Contains(tempTuple);
 
                         counter += 1;
                     }
@@ -173,7 +181,7 @@ public class WaveFunction
                     // check if there are any true values in the array
                     if (!pairsAllowed.Any(b => b))
                     {
-	                    neighborTile.UpdateSuperposition(otherLetter, false);
+	                    neighborTile.UpdateSuperposition(otherTileHash, false);
 	                    stack.Push(neighborTile);
                     }
                 }
@@ -184,22 +192,22 @@ public class WaveFunction
 	/**
 	 * Creates a list of lists of the letters available for each tile
 	 */
-	private List<List<char>> CreateLetterMap()
+	private List<List<string>> CreateLetterMap()
 	{
-		List<List<char>> letterMap = new List<List<char>>();
+		List<List<string>> letterMap = new List<List<string>>();
 		foreach (MapTile tile in _grid)
 		{
-			List<char> tileLetters = new List<char>();
+			List<string> tileHashes = new List<string>();
 			
-			foreach (KeyValuePair<char,bool> superposition in tile.GetSuperpositions())
+			foreach (KeyValuePair<string, bool> superposition in tile.GetSuperpositions())
 			{
 				if (superposition.Value)
 				{
-					tileLetters.Add(superposition.Key);
+					tileHashes.Add(superposition.Key);
 				}
 			}
 			
-			letterMap.Add(tileLetters);
+			letterMap.Add(tileHashes);
 		}
 
 		return letterMap;

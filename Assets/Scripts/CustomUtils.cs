@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 /**
@@ -62,6 +60,54 @@ public static class CustomUtils
     {
         return x >= 0 && x < width && y >= 0 && y < height;
     }
+    
+    /**
+     * Converts a colour to its Hex representation
+     */
+    public static string ColorToHex(Color color)
+    {
+        return ColorUtility.ToHtmlStringRGB(color);
+    }
+    
+    /**
+     * Converts a Hex color to a Unity Color class
+     */
+    public static Color HexToColor(string hex)
+    {
+        if (string.IsNullOrEmpty(hex))
+        {
+            Debug.LogError("Hex string is null or empty.");
+            return Color.magenta; // Fallback color
+        }
+
+        if (hex.Length != 6)
+        {
+            Debug.LogError("Hex string must be exactly 6 characters long (RRGGBB).");
+            return Color.magenta;
+        }
+        
+        try
+        {
+            float r = int.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber) / 255f;
+            float g = int.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber) / 255f;
+            float b = int.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber) / 255f;
+
+            return new Color(r, g, b);
+        }
+        catch
+        {
+            Debug.LogError($"Invalid hex string: {hex}");
+            return Color.magenta;
+        }
+    }
+    
+    // /**
+    //  * Takes a list of colors and calculates an average color
+    //  */
+    // public static Color CalculateAverageColor()
+    // {
+    //     
+    // }
     
     /********* DEBUG STUFF *********/
     

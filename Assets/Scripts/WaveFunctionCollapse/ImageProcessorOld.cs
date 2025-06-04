@@ -10,13 +10,20 @@ using UnityEngine;
  *
  * Represents each colour as a letter
  */
-public class ImageProcessor
+// TODO: turn this class into a monobehaviour. The processor script will be executed in the unity editor,
+// then the wfc data will be loaded in from the file at runtime
+// TODO: add editor script to add a button to process the input image
+// TODO: maybe add the image in this script, so I don't have to reference it in the game controller
+public class ImageProcessorOld
 {
 	private readonly Texture2D _original;
 	private readonly TextureImporter _importer;
 	private readonly string _assetPath;
 	
 	// idk if char was the best type for the letter
+	// TODO: most of these should be moved to WfcGenerationData.
+	// even if not reading from the file, this should be the class to be passed to the WFC instance
+	// this will require refactoring the WFC class, again, to load the data from this class
 	private int _totalPixels;
 	private char[] _letters; // the letter representation of the input image colour array
 
@@ -32,9 +39,22 @@ public class ImageProcessor
 	private HashSet<Tuple<char, char, string>> _letterPairs;
 	private Dictionary<char, Dictionary<string, List<char>>> _letterNeighbors;
 	
-	public ImageProcessor(Texture2D texture)
+	// TODO: add a WfcGenerationData instance here
+	// this will contain every relevant piece of data 
+	
+	public ImageProcessorOld(Texture2D texture)
 	{
 		_original = texture;
+		
+		Debug.Log(_original.name);
+		
+		Debug.Log(Application.persistentDataPath);
+		
+		// TODO: some checks here to see if loading and or saving to a file
+		// if file exists
+		// load from file
+		// else
+		// create and save to file
 		
 		// set image importer
 		_assetPath = AssetDatabase.GetAssetPath(texture);
@@ -103,6 +123,7 @@ public class ImageProcessor
 			// I shouldn't really if I'm processing stuff nicely
 			
 			// create color-letter map
+			// TODO: Invert this before saving to file so that it's char, Color
 			if (_colorLetterMap.TryAdd(color, currentLetter))
 			{
 				currentLetter++;

@@ -22,24 +22,33 @@ public class GameController : MonoBehaviour
     
     [Header("Display Settings")] 
     public float inputDisplayWidth = 200f;
-
+    
+    [Header("Animation Settings")]
     public int generationStep = 0;
     public float frameDelay = 0.5f;
     
     // keeping the header here for the replay functionality
     // [Header("Simulation Settings")] 
-    
-    private ImageProcessor _processor;
+
+    private WfcGenerationData _waveFunctionData;
 
     private ReplayWfc _replay;
     
     void Start()
     {
         DrawInputPanel();
-        
-        ProcessInput();
+
+        LoadWaveFunctionData();
 
         DrawTileWeightPanels();
+    }
+
+    private void LoadWaveFunctionData()
+    {
+        Debug.Log("File name" + input.name);
+        
+        // TODO: some better checks if the name cannot be found
+        _waveFunctionData = WaveFunctionDataSaver.LoadFromJson(input.name);
     }
     
     /**
@@ -48,8 +57,8 @@ public class GameController : MonoBehaviour
     public void Generate()
     {
         Debug.Log("Started Generation");
-
-        WaveFunction wf = new WaveFunction(width, _processor);
+        
+        WaveFunction wf = new WaveFunction(width, _waveFunctionData);
 
         while (wf.HasUncollapsed())
         {
@@ -135,37 +144,28 @@ public class GameController : MonoBehaviour
      */
     private void DrawTileWeightPanels()
     {
-        int totalPixels = _processor.GetTotalPixels();
-        Dictionary<Color, char> colorLetterMap = _processor.GetColorLetterMap();
-        Dictionary<char, int> letterCounts = _processor.GetLetterCounts();
+        int totalPixels = _waveFunctionData.TotalPixels;
+        Dictionary<string, Color> tileColorMap = _waveFunctionData.TileMap;
+        Dictionary<string, int> letterCounts = _waveFunctionData.TileCounts;
 
         int index = 0;
-        foreach (KeyValuePair<Color, char> kvp in colorLetterMap)
+        foreach (KeyValuePair<string, Color> kvp in tileColorMap)
         {
             Vector3 position = new Vector3(0f, index * tileWeightDisplayPrefab.GetComponent<RectTransform>().rect.height, 0f);
             
             // calculate panel values
-            Color color = kvp.Key;
-            string ratioText = letterCounts[kvp.Value] + "/" + totalPixels;
-            char letter = kvp.Value;
+            Color color = kvp.Value;
+            string ratioText = letterCounts[kvp.Key] + "/" + totalPixels;
+            string tileHash = kvp.Key;
             
             // create and assign values
             GameObject tileWeightDisplay = Instantiate(tileWeightDisplayPrefab, position, Quaternion.identity);
-            tileWeightDisplay.GetComponent<TileWeightDisplay>().DisplayData(color, ratioText, letter);
+            tileWeightDisplay.GetComponent<TileWeightDisplay>().DisplayData(color, ratioText, tileHash);
             
             tileWeightDisplay.transform.SetParent(tileWeightParent);
 
             index += 1;
         }
-    }
-    
-    /**
-     * Process the input image 
-     */
-    private void ProcessInput()
-    {
-        _processor = new ImageProcessor(input);
-        _processor.Process();
     }
     
     /**
