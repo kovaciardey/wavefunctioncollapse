@@ -47,7 +47,7 @@ public class GameController : MonoBehaviour
     {
         Debug.Log("File name" + input.name);
         
-        // TODO: some better checks if the name cannot be found
+        // TODO: check if the input file cannot be found. if it cannot perhaps run the processing script automatically?
         _waveFunctionData = WaveFunctionDataSaver.LoadFromJson(input.name);
     }
     

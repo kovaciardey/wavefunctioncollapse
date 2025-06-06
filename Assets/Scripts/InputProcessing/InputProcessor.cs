@@ -1,12 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography;
 using UnityEngine;
+
+// TODO: might be an idea to play around with non square tiles
 
 /**
  * Script to process an input image for WFC. Does all the required pre-processing such as splitting into tiles,
  * calculating weights and neighbors. Saves this data to a JSON file.
  */
+// TODO: as an idea for dungeons, maybe I can integrate a slight BSP, with maybe just a few nodes as a starting point
+// TODO: I will need to load some of the examples from the official github
 public class InputProcessor : MonoBehaviour
 {
     // TODO: it might ne an idea to also save all the tiles as .png or smth in the folder to
@@ -19,6 +24,15 @@ public class InputProcessor : MonoBehaviour
     // TODO: for later have the option to select all the available input images from a dropdown?
     //  maybe this would be good to have inside of the program rather than the editor
     
+    // TODO: for the tiles on the edge also implement wrap around
+    
+    // TODO: calculate the rotations and symmetries for the tiles as well
+    // I think the input images that I made don't work this well with the rotations, because there may be cases like
+    // AAA                          BAA
+    // AAB    Should Tile with      BBB
+    // AAA                          BAA
+    // So I can't really check the whether the rightmost column of the tile on the left, matches the leftmost column on the tile on the right
+    
     public Texture2D input;
 
     public int tileSize = 1;
@@ -29,12 +43,18 @@ public class InputProcessor : MonoBehaviour
     
     // the input image as a list of string hashes to represent each pixel
     private List<string> _tilesAsHashes;
-
+    
+    // TODO: refactor this into separate functions
     public void ProcessImage()
     {
         // TODO: refactor some bits here. use the object notation and have functions to set all the bits below?
         _generationData = new WfcGenerationData();
         _tilesAsHashes = new List<string>();
+        
+        SplitTexture(input);
+        return;
+        
+        // TODO: restore this later
         
         // TODO: this will later be updated to be a list of N by N tiles
         _generationData.TotalPixels = input.GetPixels().Length;
@@ -78,12 +98,93 @@ public class InputProcessor : MonoBehaviour
         
         Debug.Log("Processed the Input");
     }
+    
+    // TODO: this assumes that the input can be split evenly
+    private void SplitTexture(Texture2D texture)
+    {
+        if (texture == null || tileSize <= 0)
+        {
+            Debug.LogError("Invalid texture or n value.");
+            return;
+        }
+        
+        List<Texture2D> uniqueTiles = new List<Texture2D>();
+        
+        int width = texture.width;
+        int height = texture.height;
+        
+        // // Check if the texture can be evenly split
+        // if (width % tileSize != 0 || height % tileSize != 0)
+        // {
+        //     Debug.LogError($"Texture size {width}x{height} cannot be evenly split into {tileSize}x{tileSize} tiles.");
+        //     return;
+        // }
+        
+        int tileWidth = width / tileSize;
+        int tileHeight = height / tileSize;
+
+        for (int y = 0; y < tileWidth; y++)
+        {
+            for (int x = 0; x < tileHeight; x++)
+            {
+                Texture2D tile = new Texture2D(tileSize, tileSize);
+                tile.SetPixels(texture.GetPixels(x * tileSize, y * tileSize, tileSize, tileSize));
+                tile.Apply();
+
+                string hash = GenerateTileKey(tile.GetPixels());
+                
+                if (!_generationData.TileHashes.Contains(hash))
+                {
+                    _generationData.TileHashes.Add(hash);
+                    uniqueTiles.Add(tile);
+                }
+                else
+                {
+                    DestroyImmediate(tile);
+                }
+            }
+        }
+        
+        SaveUniqueTilesImage(uniqueTiles, tileSize);
+        
+        Debug.Log($"Found {uniqueTiles.Count} unique tiles.");
+    }
+    
+    private void SaveUniqueTilesImage(List<Texture2D> uniqueTiles, int tileSize)
+    {
+        int outputWidth = tileSize * uniqueTiles.Count;
+        int outputHeight = tileSize;
+
+        Texture2D outputTexture = new Texture2D(outputWidth, outputHeight);
+        outputTexture.filterMode = FilterMode.Point; // important for pixel art
+
+        for (int i = 0; i < uniqueTiles.Count; i++)
+        {
+            Texture2D tile = uniqueTiles[i];
+            outputTexture.SetPixels(i * tileSize, 0, tileSize, tileSize, tile.GetPixels());
+        }
+
+        outputTexture.Apply();
+
+        byte[] pngData = outputTexture.EncodeToPNG();
+        if (pngData != null)
+        {
+            string resourcesPath = Application.dataPath + "/Resources/";
+            string outputPath = resourcesPath + "UniqueTiles.png";
+
+            Directory.CreateDirectory(resourcesPath);
+            File.WriteAllBytes(outputPath, pngData);
+
+            Debug.Log("Unique tiles image saved to: " + outputPath);
+        }
+
+        DestroyImmediate(outputTexture);
+    }
 
     /**
      * Generates a unique MD5 string to identify each tile.
      *
      * Takes an array of color values
-     * TODO: may need to update this in the future to be a 2D array
      *
      * Creates a byte List equal to the length of the initial array multiplied by 3
      * (the 3 channels that I will be using are R G B as alpha is not relevant in this case)
@@ -97,18 +198,15 @@ public class InputProcessor : MonoBehaviour
     {
         // Only using 3 Channels: R G B, so there will be 3 entries per tilePixel
         List<byte> data = new List<byte>(tilePixels.Length * 3);
-        
-        for (int y = 0; y < tileSize; y++) // Row-major order
+
+        foreach (Color pixel in tilePixels)
         {
-            for (int x = 0; x < tileSize; x++)
-            {
-                // implicit conversion of Unity Color to Color32 (stores R G B as bytes rather than float)
-                Color32 color = tilePixels[CustomUtils.GetArrayIndexFromCoords(x, y, tileSize)];
+            // implicit conversion of Unity Color to Color32 (stores R G B as bytes rather than float)
+            Color32 color = pixel;
                 
-                data.Add(color.r);
-                data.Add(color.g);
-                data.Add(color.b);
-            }
+            data.Add(color.r);
+            data.Add(color.g);
+            data.Add(color.b);
         }
 
         using (MD5 md5 = MD5.Create())
@@ -121,6 +219,8 @@ public class InputProcessor : MonoBehaviour
     /**
      * Calculates the set of 3-tuples for the input image
      */
+    // TODO: this will need updating to work with n*n tiles
+    // TODO: additionally add wrapping to the tiles on the side 
     private void CalculateOrthogonalPairs()
     {
         int width = input.width;
@@ -163,6 +263,8 @@ public class InputProcessor : MonoBehaviour
      * Not used for the generation but thought I would add for the future
      * Might be useful at some point to have the neighbors represented like this
      */
+    // TODO: might also be an idea to have this as the only way of saving the neighbors to the JSON file, and then calculate the tuples on JSON load
+    // would it improve the Wave function algorithm in any way if this is how I check for adjacency?
     private void CalculateAllowedNeighbors()
     {   
         // initialise the dictionary:

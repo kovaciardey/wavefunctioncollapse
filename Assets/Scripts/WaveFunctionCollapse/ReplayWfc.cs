@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // TODO: would it be an idea to save these as a JSON as well?
+// orr maybe as a sprite atlas, this might allow for easier control when replaying 
 public class ReplayWfc
 {
     

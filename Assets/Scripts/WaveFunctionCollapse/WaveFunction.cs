@@ -136,6 +136,8 @@ public class WaveFunction
 	/**
 	 * Propagate the collapse of a tile to the rest of the neighbors
 	 */
+	// TODO: would it be more efficient to stop the propagation at a specific point and then do backtracking if anything breaks?
+	// rather than letting the propagation go through every tile?
     private void Propagate(MapTile tile)
     {
         Stack<MapTile> stack = new Stack<MapTile>();
