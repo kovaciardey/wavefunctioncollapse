@@ -10,6 +10,7 @@ public class GameController : MonoBehaviour
     [Header("Generation Settings")]
     public Texture2D input;
     
+    // This is the width of the output grid
     // will work with square output for now and I'll make it rectangle later
     public int width = 5;
 
@@ -85,7 +86,6 @@ public class GameController : MonoBehaviour
         StartCoroutine(AnimateGeneration());
     }
     
-    //TODO: maybe improve this with the suggestions from CHAT GPT!
     IEnumerator AnimateGeneration()
     {
         for (int i = 0; i < _replay.GetNumberOfIterations(); i++)
@@ -172,6 +172,7 @@ public class GameController : MonoBehaviour
      * Create a texture from the given color map
      * Display the texture on the panel
      */
+    // TODO: this will need to get the final grid and a tileHash => tileTexture map to build the final result
     private void DrawTexture(Color[] colorMap)
     {
         Texture2D texture = new Texture2D (width, width)

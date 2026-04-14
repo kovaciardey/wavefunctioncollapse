@@ -27,12 +27,16 @@ public class InputProcessor : MonoBehaviour
     // TODO: for the tiles on the edge also implement wrap around
     
     // TODO: calculate the rotations and symmetries for the tiles as well
+    // TODO: do I want to save a very small subset of tiles? and then calculate the rotations on import of the data?
+    
+    
     // I think the input images that I made don't work this well with the rotations, because there may be cases like
     // AAA                          BAA
     // AAB    Should Tile with      BBB
     // AAA                          BAA
     // So I can't really check the whether the rightmost column of the tile on the left, matches the leftmost column on the tile on the right
     
+     
     public Texture2D input;
 
     public int tileSize = 1;
@@ -41,7 +45,7 @@ public class InputProcessor : MonoBehaviour
     
     private WfcGenerationData _generationData;
     
-    // the input image as a list of string hashes to represent each pixel
+    // the input image as a list of string hashes to represent each tile it's been split into
     private List<string> _tilesAsHashes;
     
     // TODO: refactor this into separate functions
@@ -50,6 +54,16 @@ public class InputProcessor : MonoBehaviour
         // TODO: refactor some bits here. use the object notation and have functions to set all the bits below?
         _generationData = new WfcGenerationData();
         _tilesAsHashes = new List<string>();
+
+        try
+        {
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
         
         SplitTexture(input);
         return;
@@ -99,7 +113,13 @@ public class InputProcessor : MonoBehaviour
         Debug.Log("Processed the Input");
     }
     
-    // TODO: this assumes that the input can be split evenly
+    // TODO: this assumes that the input can be split evenly. I need to add checks for these to throw an error if it cannot
+    // This needs to also create an array of all the tile so I can count them and calculate the weights 
+    /**
+     * Splits the input image into n*n tiles.
+     *
+     * Creates
+     */
     private void SplitTexture(Texture2D texture)
     {
         if (texture == null || tileSize <= 0)
@@ -113,6 +133,7 @@ public class InputProcessor : MonoBehaviour
         int width = texture.width;
         int height = texture.height;
         
+        // TODO: this check is only for the tiled model. the size of the image shouldn't have any impact in the overlapping model 
         // // Check if the texture can be evenly split
         // if (width % tileSize != 0 || height % tileSize != 0)
         // {
@@ -133,9 +154,9 @@ public class InputProcessor : MonoBehaviour
 
                 string hash = GenerateTileKey(tile.GetPixels());
                 
-                if (!_generationData.TileHashes.Contains(hash))
+                // TODO: this also needs to figure out the index of where each has can be found in the output image
+                if (_generationData.TileHashes.Add(hash))
                 {
-                    _generationData.TileHashes.Add(hash);
                     uniqueTiles.Add(tile);
                 }
                 else
@@ -150,6 +171,11 @@ public class InputProcessor : MonoBehaviour
         Debug.Log($"Found {uniqueTiles.Count} unique tiles.");
     }
     
+    // TODO: will use this method. simple generate .png of all the tiles and store the index in the JSON.
+    // when creating the WfcData class, it will hold a Dictionary tileHash => texture that will be calculated
+    // it shouldn't be too large so it shouldn't impact the memory
+    // but it will reduce processing at runtime rather than having to split the input image at runtime
+    // TODO: split this function into 2. have one to create the texture, and the other move to WaveFunctionDataSaver to actually save the .png file
     private void SaveUniqueTilesImage(List<Texture2D> uniqueTiles, int tileSize)
     {
         int outputWidth = tileSize * uniqueTiles.Count;
