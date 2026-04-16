@@ -174,6 +174,7 @@ public class GameController : MonoBehaviour
      */
     private void DrawTexture(Color[] colorMap)
     {
+        // TODO: resize the output panel RectTransform to match the width/height aspect ratio (same logic as DrawInputPanel)
         Texture2D texture = new Texture2D(width, height)
         {
             filterMode = FilterMode.Point,
