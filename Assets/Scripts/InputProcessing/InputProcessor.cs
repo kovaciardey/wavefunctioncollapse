@@ -23,6 +23,8 @@ public class InputProcessor : MonoBehaviour
 
     public int tileSize = 1;
 
+    public WfcModelType modelType = WfcModelType.Adjacent;
+
     
     
     private WfcGenerationData _generationData;
@@ -35,7 +37,9 @@ public class InputProcessor : MonoBehaviour
         // TODO: refactor some bits here. use the object notation and have functions to set all the bits below?
         _generationData = new WfcGenerationData();
         _tilesAsHashes = new List<string>();
-        
+
+        _generationData.ModelType = modelType;
+
         // TODO: this will later be updated to be a list of N by N tiles
         _generationData.TotalPixels = input.GetPixels().Length;
         

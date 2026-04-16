@@ -18,6 +18,7 @@ public class WaveFunctionDataSaver
     [System.Serializable]
     private class WfcDataWrapper
     {
+        public string modelType;
         public int totalPixels;
         public List<string> tileHashes = new List<string>();
         public List<TileData> tileDataList = new List<TileData>();
@@ -51,6 +52,7 @@ public class WaveFunctionDataSaver
 
         public WfcDataWrapper(WfcGenerationData data)
         {
+            modelType = data.ModelType.ToString();
             totalPixels = data.TotalPixels;
 
             foreach (string tileHash in data.TileHashes)
@@ -122,6 +124,7 @@ public class WaveFunctionDataSaver
         WfcDataWrapper wrapper = JsonUtility.FromJson<WfcDataWrapper>(jsonFile.text);
         var data = new WfcGenerationData
         {
+            ModelType = (WfcModelType) Enum.Parse(typeof(WfcModelType), wrapper.modelType),
             TotalPixels = wrapper.totalPixels,
             TileHashes = new HashSet<string>(),
             TileMap = new Dictionary<string, Color>(),
