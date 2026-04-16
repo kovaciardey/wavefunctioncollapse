@@ -41,10 +41,13 @@ Implement the Wave Function Collapse algorithm in Unity with:
 - [x] Add `modelType` enum (`Adjacent` / `Overlapping`) to `WfcGenerationData` (enum + field only — JSON serialization deferred to Phase 2)
 
 ### Phase 2 — Adjacent model, NxN input processing
-- [ ] `InputProcessor.ProcessImage()`: loop in steps of `tileSize`, extract `tileSize×tileSize` pixel patches
-- [ ] Add `wrapEdges` toggle to `InputProcessor` (default `true`) — affects pattern extraction and neighbor calculation
-- [ ] Store per-tile pixel array in JSON: flat array of hex strings, `tileSize²` entries per tile
+- [x] Serialize/deserialize `modelType` in `WaveFunctionDataSaver`
+- [x] Add `wrapEdges` toggle to `InputProcessor` (default `true`) — affects neighbor calculation
+- [x] `InputProcessor.ProcessImage()`: loop in steps of `tileSize`, extract `tileSize×tileSize` pixel patches
 - [ ] `CalculateOrthogonalPairs`: iterate over tile-grid coords `(imageWidth/tileSize)` × `(imageHeight/tileSize)`
+- [ ] Add `TileSymmetry` flags enum to `InputProcessor`; generate enabled rotation/flip variants of each tile during extraction
+- [ ] Store per-tile pixel array in JSON: flat array of hex strings, `tileSize²` entries per tile
+- [ ] Update `WaveFunctionDataSaver` to serialize/deserialize per-tile pixel arrays
 
 ### Phase 3 — Adjacent model, NxN output rendering
 - [ ] `ReplayWfc.CreateColorMap()`: blit full `tileSize×tileSize` pixel block per collapsed cell
@@ -54,6 +57,7 @@ Implement the Wave Function Collapse algorithm in Unity with:
 ### Phase 4 — Overlapping model, input processing
 - [ ] New processor path (flag or subclass of `InputProcessor`)
 - [ ] Sliding window extraction, step = 1 px; `wrapEdges` controls boundary behaviour (default `true`)
+- [ ] Add `TileSymmetry` augmentation for overlapping patterns (rotate/flip extracted patterns before deduplication)
 - [ ] Compatibility constraint: overlapping pixel slice must match pixel-for-pixel
 - [ ] Same JSON schema, `modelType = Overlapping`, pixel array per pattern
 
