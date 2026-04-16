@@ -36,9 +36,9 @@ Implement the Wave Function Collapse algorithm in Unity with:
 ## Implementation Phases
 
 ### Phase 1 — Foundations
-- [ ] Fix `GetArrayIndexFromCoords` bug: `coords.x * width + coords.y` → `coords.y * width + coords.x` (`CustomUtils.cs:52`)
-- [ ] Add `height` parameter to `WaveFunction` constructor (remove square-only restriction)
-- [ ] Add `modelType` enum (`Adjacent` / `Overlapping`) to `WfcGenerationData` + JSON
+- [x] Fix `GetArrayIndexFromCoords` bug: `coords.x * width + coords.y` → `coords.y * width + coords.x` (`CustomUtils.cs:52`)
+- [x] Add `height` parameter to `WaveFunction` constructor (remove square-only restriction)
+- [x] Add `modelType` enum (`Adjacent` / `Overlapping`) to `WfcGenerationData` (enum + field only — JSON serialization deferred to Phase 2)
 
 ### Phase 2 — Adjacent model, NxN input processing
 - [ ] `InputProcessor.ProcessImage()`: loop in steps of `tileSize`, extract `tileSize×tileSize` pixel patches

@@ -73,6 +73,7 @@ crashlytics-build.properties
 
 # IDE stuff
 .idea
+.vscode
 
 # Ignore any processed input data
 /[Aa]ssets/Resources/*

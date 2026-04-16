@@ -8,12 +8,20 @@ using UnityEngine;
 //  would need to be hidden behind a button or smth
 
 
+public enum WfcModelType
+{
+    Adjacent,
+    Overlapping
+}
+
 /**
  * This class is a set of data the will be passed to the WaveFunctionCollapse algorithm for generation
  */
 [System.Serializable]
 public class WfcGenerationData
 {
+    public WfcModelType ModelType { get; set; } = WfcModelType.Adjacent;
+
     // The total number of pixels in the input image
     public int TotalPixels { get; set; }
 
