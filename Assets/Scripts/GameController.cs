@@ -20,8 +20,9 @@ public class GameController : MonoBehaviour
     public Transform tileWeightParent;
     public GameObject tileWeightDisplayPrefab;
     
-    [Header("Display Settings")] 
+    [Header("Display Settings")]
     public float inputDisplayWidth = 200f;
+    public float outputDisplayWidth = 200f;
     
     [Header("Animation Settings")]
     public int generationStep = 0;
@@ -170,11 +171,10 @@ public class GameController : MonoBehaviour
     
     /**
      * Create a texture from the given color map
-     * Display the texture on the panel
+     * Display the texture on the panel, resizing the panel to maintain aspect ratio
      */
     private void DrawTexture(Color[] colorMap)
     {
-        // TODO: resize the output panel RectTransform to match the width/height aspect ratio (same logic as DrawInputPanel)
         Texture2D texture = new Texture2D(width, height)
         {
             filterMode = FilterMode.Point,
@@ -185,5 +185,21 @@ public class GameController : MonoBehaviour
         texture.Apply();
 
         outputDisplay.texture = texture;
+
+        float aspectRatio = (float) width / height;
+        float newWidth, newHeight;
+
+        if (aspectRatio > 1)
+        {
+            newWidth = outputDisplayWidth;
+            newHeight = outputDisplayWidth / aspectRatio;
+        }
+        else
+        {
+            newHeight = outputDisplayWidth;
+            newWidth = outputDisplayWidth * aspectRatio;
+        }
+
+        outputDisplay.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth, newHeight);
     }
 }
