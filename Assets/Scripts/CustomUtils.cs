@@ -50,7 +50,7 @@ public static class CustomUtils
      */
     public static int GetArrayIndexFromCoords(Vector2Int coords, int width)
     {
-        return coords.x * width + coords.y;
+        return coords.y * width + coords.x;
     }
     
     /**
