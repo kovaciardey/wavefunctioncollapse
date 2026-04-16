@@ -25,6 +25,8 @@ public class InputProcessor : MonoBehaviour
 
     public WfcModelType modelType = WfcModelType.Adjacent;
 
+    public bool wrapEdges = true;
+
     
     
     private WfcGenerationData _generationData;
@@ -142,11 +144,16 @@ public class InputProcessor : MonoBehaviour
                     int neighborX = x + direction.x;
                     int neighborY = y + direction.y;
                     
-                    if (!CustomUtils.IsWithinBounds(neighborX, neighborY, width, height))
+                    if (wrapEdges)
+                    {
+                        neighborX = (neighborX + width) % width;
+                        neighborY = (neighborY + height) % height;
+                    }
+                    else if (!CustomUtils.IsWithinBounds(neighborX, neighborY, width, height))
                     {
                         continue;
                     }
-                    
+
                     string neighborHash = _tilesAsHashes[CustomUtils.GetArrayIndexFromCoords(neighborX, neighborY, width)];
                     string directionName = CustomUtils.GetDirectionString(direction);
                     
