@@ -37,6 +37,12 @@ public class InputProcessor : MonoBehaviour
     public void ProcessImage()
     {
         // TODO: refactor some bits here. use the object notation and have functions to set all the bits below?
+        if (input.width % tileSize != 0 || input.height % tileSize != 0)
+        {
+            Debug.LogError($"Input image ({input.width}x{input.height}) cannot be evenly divided by tileSize ({tileSize}).");
+            return;
+        }
+
         _generationData = new WfcGenerationData();
         _tilesAsHashes = new List<string>();
 

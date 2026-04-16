@@ -44,7 +44,8 @@ Implement the Wave Function Collapse algorithm in Unity with:
 - [x] Serialize/deserialize `modelType` in `WaveFunctionDataSaver`
 - [x] Add `wrapEdges` toggle to `InputProcessor` (default `true`) — affects neighbor calculation
 - [x] `InputProcessor.ProcessImage()`: loop in steps of `tileSize`, extract `tileSize×tileSize` pixel patches
-- [ ] `CalculateOrthogonalPairs`: iterate over tile-grid coords `(imageWidth/tileSize)` × `(imageHeight/tileSize)`
+- [x] `CalculateOrthogonalPairs`: iterate over tile-grid coords `(imageWidth/tileSize)` × `(imageHeight/tileSize)`
+- [ ] Validate that `input.width` and `input.height` are both divisible by `tileSize` before processing
 - [ ] Add `TileSymmetry` flags enum to `InputProcessor`; generate enabled rotation/flip variants of each tile during extraction
 - [ ] Store per-tile pixel array in JSON: flat array of hex strings, `tileSize²` entries per tile
 - [ ] Update `WaveFunctionDataSaver` to serialize/deserialize per-tile pixel arrays
