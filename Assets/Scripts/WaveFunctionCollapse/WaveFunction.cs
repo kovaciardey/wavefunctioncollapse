@@ -12,17 +12,18 @@ using Random = UnityEngine.Random;
 public class WaveFunction
 {
 	private readonly int _width;
-	private readonly ImageProcessorOld _processorOld;
+	private readonly int _height;
 
 	private readonly WfcGenerationData _waveFunctionData;
-	
+
 	private MapTile[] _grid;
-	
+
 	private readonly ReplayWfc _replay;
 
-	public WaveFunction(int width, WfcGenerationData waveFunctionData)
+	public WaveFunction(int width, int height, WfcGenerationData waveFunctionData)
 	{
 		_width = width;
+		_height = height;
 		_waveFunctionData = waveFunctionData;
 		
 		_replay = new ReplayWfc(_waveFunctionData.TileMap);
@@ -36,8 +37,8 @@ public class WaveFunction
 	 */
 	private void InitialiseGrid()
 	{
-		_grid = new MapTile[_width * _width];
-		for (int y = 0; y < _width; y += 1)
+		_grid = new MapTile[_width * _height];
+		for (int y = 0; y < _height; y += 1)
 		{
 			for (int x = 0; x < _width; x += 1)
 			{
@@ -150,7 +151,7 @@ public class WaveFunction
 	            // get all neighbors and skip collapsed and out of bounds tiles
                 Vector2Int neighborCoords = currentTile.GetCoords() + direction;
                 
-                if (!CustomUtils.IsWithinBounds(neighborCoords.x, neighborCoords.y, _width, _width))
+                if (!CustomUtils.IsWithinBounds(neighborCoords.x, neighborCoords.y, _width, _height))
                 {
                     continue;
                 }

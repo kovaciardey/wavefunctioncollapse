@@ -10,8 +10,8 @@ public class GameController : MonoBehaviour
     [Header("Generation Settings")]
     public Texture2D input;
     
-    // will work with square output for now and I'll make it rectangle later
     public int width = 5;
+    public int height = 5;
 
     [Header("Display")]
     public Image inputDisplay;
@@ -58,7 +58,7 @@ public class GameController : MonoBehaviour
     {
         Debug.Log("Started Generation");
         
-        WaveFunction wf = new WaveFunction(width, _waveFunctionData);
+        WaveFunction wf = new WaveFunction(width, height, _waveFunctionData);
 
         while (wf.HasUncollapsed())
         {
@@ -174,7 +174,7 @@ public class GameController : MonoBehaviour
      */
     private void DrawTexture(Color[] colorMap)
     {
-        Texture2D texture = new Texture2D (width, width)
+        Texture2D texture = new Texture2D(width, height)
         {
             filterMode = FilterMode.Point,
             wrapMode = TextureWrapMode.Clamp
