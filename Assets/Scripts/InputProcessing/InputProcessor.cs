@@ -137,10 +137,10 @@ public class InputProcessor : MonoBehaviour
      */
     private void CalculateOrthogonalPairs()
     {
-        int width = input.width;
-        int height = input.height;
-        
-        // iterates through the input starting from the bottom-left corner
+        int width = input.width / tileSize;
+        int height = input.height / tileSize;
+
+        // iterates through the tile grid starting from the bottom-left corner
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
