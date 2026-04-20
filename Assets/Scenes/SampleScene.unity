@@ -425,7 +425,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   input: {fileID: 2800000, guid: 382f7643b949532479bdaf09a27c4e40, type: 3}
-  tileSize: 1
+  tileSize: 2
+  modelType: 0
+  wrapEdges: 1
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -566,7 +568,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   input: {fileID: 2800000, guid: 382f7643b949532479bdaf09a27c4e40, type: 3}
   width: 25
-  height: 5
+  height: 15
   inputDisplay: {fileID: 134526413}
   outputDisplay: {fileID: 1737845382}
   tileWeightParent: {fileID: 378442277}

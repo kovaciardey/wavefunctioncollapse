@@ -41,19 +41,25 @@ Implement the Wave Function Collapse algorithm in Unity with:
 - [x] Add `modelType` enum (`Adjacent` / `Overlapping`) to `WfcGenerationData` (enum + field only — JSON serialization deferred to Phase 2)
 
 ### Phase 2 — Adjacent model, NxN input processing
-- [ ] `InputProcessor.ProcessImage()`: loop in steps of `tileSize`, extract `tileSize×tileSize` pixel patches
-- [ ] Add `wrapEdges` toggle to `InputProcessor` (default `true`) — affects pattern extraction and neighbor calculation
+- [x] Serialize/deserialize `modelType` in `WaveFunctionDataSaver`
+- [x] Add `wrapEdges` toggle to `InputProcessor` (default `true`) — affects neighbor calculation
+- [x] `InputProcessor.ProcessImage()`: loop in steps of `tileSize`, extract `tileSize×tileSize` pixel patches
+- [x] `CalculateOrthogonalPairs`: iterate over tile-grid coords `(imageWidth/tileSize)` × `(imageHeight/tileSize)`
+- [x] Validate that `input.width` and `input.height` are both divisible by `tileSize` before processing
+- [ ] Store per-tile pixel array in `WfcGenerationData` (`TilePixels: Dictionary<string, Color[]>`) and populate during extraction
 - [ ] Store per-tile pixel array in JSON: flat array of hex strings, `tileSize²` entries per tile
-- [ ] `CalculateOrthogonalPairs`: iterate over tile-grid coords `(imageWidth/tileSize)` × `(imageHeight/tileSize)`
+- [ ] Update `WaveFunctionDataSaver` to serialize/deserialize per-tile pixel arrays
 
 ### Phase 3 — Adjacent model, NxN output rendering
 - [ ] `ReplayWfc.CreateColorMap()`: blit full `tileSize×tileSize` pixel block per collapsed cell
 - [ ] Uncollapsed cells: average color of all still-possible tiles (already done for 1×1, needs scaling)
 - [ ] `GameController.DrawTexture()`: output texture = `gridWidth * tileSize` × `gridHeight * tileSize`
+- [ ] *(optional, display only)* `GenerateSpriteSheet()` in `InputProcessor`: pack all unique tiles into a single PNG at process time; `TileWeightDisplay` samples tiles from the sheet by index instead of constructing individual textures
 
 ### Phase 4 — Overlapping model, input processing
 - [ ] New processor path (flag or subclass of `InputProcessor`)
 - [ ] Sliding window extraction, step = 1 px; `wrapEdges` controls boundary behaviour (default `true`)
+- [ ] Add `TileSymmetry` augmentation for overlapping patterns (rotate/flip extracted patterns before deduplication)
 - [ ] Compatibility constraint: overlapping pixel slice must match pixel-for-pixel
 - [ ] Same JSON schema, `modelType = Overlapping`, pixel array per pattern
 

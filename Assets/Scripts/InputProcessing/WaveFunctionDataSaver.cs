@@ -18,6 +18,7 @@ public class WaveFunctionDataSaver
     [System.Serializable]
     private class WfcDataWrapper
     {
+        public string modelType;
         public int totalPixels;
         public List<string> tileHashes = new List<string>();
         public List<TileData> tileDataList = new List<TileData>();
@@ -29,8 +30,9 @@ public class WaveFunctionDataSaver
         {
             public string hash;
             public string colorValue;
+            public List<string> pixelColors = new List<string>();
             public int occurrences;
-            public float weight; 
+            public float weight;
             public List<TileDirectionNeighbors> allowedNeighbors;
         }
         
@@ -51,6 +53,7 @@ public class WaveFunctionDataSaver
 
         public WfcDataWrapper(WfcGenerationData data)
         {
+            modelType = data.ModelType.ToString();
             totalPixels = data.TotalPixels;
 
             foreach (string tileHash in data.TileHashes)
@@ -61,6 +64,7 @@ public class WaveFunctionDataSaver
                 {
                     hash = tileHash,
                     colorValue = CustomUtils.ColorToHex(data.TileMap[tileHash]),
+                    pixelColors = data.TilePixels[tileHash].Select(CustomUtils.ColorToHex).ToList(),
                     occurrences = data.TileCounts[tileHash],
                     weight = data.TileWeights[tileHash],
                     allowedNeighbors = new List<TileDirectionNeighbors>()
@@ -122,13 +126,14 @@ public class WaveFunctionDataSaver
         WfcDataWrapper wrapper = JsonUtility.FromJson<WfcDataWrapper>(jsonFile.text);
         var data = new WfcGenerationData
         {
+            ModelType = (WfcModelType) Enum.Parse(typeof(WfcModelType), wrapper.modelType),
             TotalPixels = wrapper.totalPixels,
             TileHashes = new HashSet<string>(),
             TileMap = new Dictionary<string, Color>(),
+            TilePixels = new Dictionary<string, Color[]>(),
             TileCounts = new Dictionary<string, int>(),
             TileWeights = new Dictionary<string, float>(),
             TileNeighbors = new HashSet<Tuple<string, string, string>>(),
-            // TODO: skipping the alternate neighbours data structure for now
         };
         
         // Create the TileHashes hashset and the dictionaries
@@ -143,6 +148,7 @@ public class WaveFunctionDataSaver
             WfcDataWrapper.TileData tileData = wrapper.tileDataList.First(tile => tile.hash == entry);
 
             data.TileMap.Add(entry, CustomUtils.HexToColor(tileData.colorValue));
+            data.TilePixels.Add(entry, tileData.pixelColors.Select(CustomUtils.HexToColor).ToArray());
             data.TileCounts.Add(entry, tileData.occurrences);
             data.TileWeights.Add(entry, tileData.weight);
         }

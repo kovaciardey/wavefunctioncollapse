@@ -23,6 +23,10 @@ public class InputProcessor : MonoBehaviour
 
     public int tileSize = 1;
 
+    public WfcModelType modelType = WfcModelType.Adjacent;
+
+    public bool wrapEdges = true;
+
     
     
     private WfcGenerationData _generationData;
@@ -33,28 +37,40 @@ public class InputProcessor : MonoBehaviour
     public void ProcessImage()
     {
         // TODO: refactor some bits here. use the object notation and have functions to set all the bits below?
+        if (input.width % tileSize != 0 || input.height % tileSize != 0)
+        {
+            Debug.LogError($"Input image ({input.width}x{input.height}) cannot be evenly divided by tileSize ({tileSize}).");
+            return;
+        }
+
         _generationData = new WfcGenerationData();
         _tilesAsHashes = new List<string>();
-        
-        // TODO: this will later be updated to be a list of N by N tiles
-        _generationData.TotalPixels = input.GetPixels().Length;
-        
-        // get all the pixels, assign a unique hash and create a hash => color map
-        // at the same time make a List with all the tiles represented by their hashes
-        foreach (Color color in input.GetPixels())
+
+        _generationData.ModelType = modelType;
+
+        int tileGridWidth = input.width / tileSize;
+        int tileGridHeight = input.height / tileSize;
+        _generationData.TotalPixels = tileGridWidth * tileGridHeight;
+
+        // extract NxN tile patches, assign a unique hash per unique tile, build hash => color map
+        for (int tileY = 0; tileY < tileGridHeight; tileY++)
         {
-            // temp making this an array as I'm only working with the single pixels, and the GenerateTileKey expects an array
-            Color[] tilePixels = {color};
-            
-            string tileKey = GenerateTileKey(tilePixels);
+            for (int tileX = 0; tileX < tileGridWidth; tileX++)
+            {
+                Color[] tilePixels = input.GetPixels(tileX * tileSize, tileY * tileSize, tileSize, tileSize);
 
-            _generationData.TileMap.TryAdd(tileKey, color);
-            
-            _tilesAsHashes.Add(tileKey);
+                string tileKey = GenerateTileKey(tilePixels);
 
-            _generationData.TileHashes.Add(tileKey);
+                if (_generationData.TileMap.TryAdd(tileKey, AverageColor(tilePixels)))
+                {
+                    _generationData.TileHashes.Add(tileKey);
+                    _generationData.TilePixels.Add(tileKey, tilePixels);
+                }
+
+                _tilesAsHashes.Add(tileKey);
+            }
         }
-        
+
         // count occurrences for each tile
         foreach (string hash in _tilesAsHashes)
         {
@@ -63,7 +79,7 @@ public class InputProcessor : MonoBehaviour
                 _generationData.TileCounts[hash] += 1;
             }
         }
-        
+
         // calculate weight for each tile
         foreach (KeyValuePair<string, int> tileCount in _generationData.TileCounts)
         {
@@ -90,9 +106,14 @@ public class InputProcessor : MonoBehaviour
      *
      * The use of bytes is necessary as it ensures there are no floating point errors like might encountered with using a float
      */
-    // TODO: will this work properly with bigger tiles?
-    //  I will need to see how it handles cases like {RED RED GREEN RED} and {RED GREEN RED RED}
-    //  I assume they will be considered as separate tiles
+    private Color AverageColor(Color[] pixels)
+    {
+        float r = 0, g = 0, b = 0;
+        foreach (Color c in pixels) { r += c.r; g += c.g; b += c.b; }
+        float count = pixels.Length;
+        return new Color(r / count, g / count, b / count);
+    }
+
     private string GenerateTileKey(Color[] tilePixels)
     {
         // Only using 3 Channels: R G B, so there will be 3 entries per tilePixel
@@ -123,10 +144,10 @@ public class InputProcessor : MonoBehaviour
      */
     private void CalculateOrthogonalPairs()
     {
-        int width = input.width;
-        int height = input.height;
-        
-        // iterates through the input starting from the bottom-left corner
+        int width = input.width / tileSize;
+        int height = input.height / tileSize;
+
+        // iterates through the tile grid starting from the bottom-left corner
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
@@ -138,11 +159,16 @@ public class InputProcessor : MonoBehaviour
                     int neighborX = x + direction.x;
                     int neighborY = y + direction.y;
                     
-                    if (!CustomUtils.IsWithinBounds(neighborX, neighborY, width, height))
+                    if (wrapEdges)
+                    {
+                        neighborX = (neighborX + width) % width;
+                        neighborY = (neighborY + height) % height;
+                    }
+                    else if (!CustomUtils.IsWithinBounds(neighborX, neighborY, width, height))
                     {
                         continue;
                     }
-                    
+
                     string neighborHash = _tilesAsHashes[CustomUtils.GetArrayIndexFromCoords(neighborX, neighborY, width)];
                     string directionName = CustomUtils.GetDirectionString(direction);
                     

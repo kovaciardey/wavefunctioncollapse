@@ -30,10 +30,12 @@ public class WfcGenerationData
     public HashSet<string> TileHashes { get; set; } = new HashSet<string>();
 
 
-    // Map the unique tile identifier (and MD5 Hash) to the color it represents
-    // The color is in hex format to make it easier for serialization
-    // TODO: this might be replaced to a reference to the tile .png file
+    // Map the unique tile identifier (and MD5 Hash) to the average color of the tile
+    // Used for superposition blending during replay — replaced by TilePixels for full NxN rendering in Phase 3
     public Dictionary<string, Color> TileMap { get; set; } = new Dictionary<string, Color>();
+
+    // Full pixel data per unique tile (tileSize² entries)
+    public Dictionary<string, Color[]> TilePixels { get; set; } = new Dictionary<string, Color[]>();
 
     
     // The number of occurrences for each tile hash
