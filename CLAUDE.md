@@ -45,8 +45,8 @@ Implement the Wave Function Collapse algorithm in Unity with:
 - [x] Add `wrapEdges` toggle to `InputProcessor` (default `true`) — affects neighbor calculation
 - [x] `InputProcessor.ProcessImage()`: loop in steps of `tileSize`, extract `tileSize×tileSize` pixel patches
 - [x] `CalculateOrthogonalPairs`: iterate over tile-grid coords `(imageWidth/tileSize)` × `(imageHeight/tileSize)`
-- [ ] Validate that `input.width` and `input.height` are both divisible by `tileSize` before processing
-- [ ] Add `TileSymmetry` flags enum to `InputProcessor`; generate enabled rotation/flip variants of each tile during extraction
+- [x] Validate that `input.width` and `input.height` are both divisible by `tileSize` before processing
+- [ ] Store per-tile pixel array in `WfcGenerationData` (`TilePixels: Dictionary<string, Color[]>`) and populate during extraction
 - [ ] Store per-tile pixel array in JSON: flat array of hex strings, `tileSize²` entries per tile
 - [ ] Update `WaveFunctionDataSaver` to serialize/deserialize per-tile pixel arrays
 
@@ -54,6 +54,7 @@ Implement the Wave Function Collapse algorithm in Unity with:
 - [ ] `ReplayWfc.CreateColorMap()`: blit full `tileSize×tileSize` pixel block per collapsed cell
 - [ ] Uncollapsed cells: average color of all still-possible tiles (already done for 1×1, needs scaling)
 - [ ] `GameController.DrawTexture()`: output texture = `gridWidth * tileSize` × `gridHeight * tileSize`
+- [ ] *(optional, display only)* `GenerateSpriteSheet()` in `InputProcessor`: pack all unique tiles into a single PNG at process time; `TileWeightDisplay` samples tiles from the sheet by index instead of constructing individual textures
 
 ### Phase 4 — Overlapping model, input processing
 - [ ] New processor path (flag or subclass of `InputProcessor`)

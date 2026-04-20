@@ -64,6 +64,7 @@ public class InputProcessor : MonoBehaviour
                 if (_generationData.TileMap.TryAdd(tileKey, AverageColor(tilePixels)))
                 {
                     _generationData.TileHashes.Add(tileKey);
+                    _generationData.TilePixels.Add(tileKey, tilePixels);
                 }
 
                 _tilesAsHashes.Add(tileKey);
